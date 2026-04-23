@@ -15,7 +15,7 @@ import { Cart, Order } from '../entities';
 @ApiTags('Orders & Cart')
 @Controller('orders')
 export class OrdersController {
-  constructor(private ordersService: OrdersService) {}
+  constructor(private ordersService: OrdersService) { }
 
   // ===== CART ENDPOINTS =====
 
@@ -49,7 +49,7 @@ export class OrdersController {
     @Param('userId') userId: string,
     @Param('cartId') cartId: string,
     @Body() updateDto: UpdateCartQuantityDto,
-  ): Promise<Cart> {
+  ): Promise<Cart | null> {
     return this.ordersService.updateCartQuantity(userId, cartId, updateDto);
   }
 

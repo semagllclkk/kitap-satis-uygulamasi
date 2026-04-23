@@ -17,7 +17,7 @@ export class OrdersService {
     private cartRepository: Repository<Cart>,
     @InjectRepository(Book)
     private bookRepository: Repository<Book>,
-  ) {}
+  ) { }
 
   // ===== CART OPERATIONS =====
 
@@ -81,7 +81,7 @@ export class OrdersService {
     userId: string,
     cartId: string,
     updateDto: UpdateCartQuantityDto,
-  ): Promise<Cart> {
+  ): Promise<Cart | null> {
     const { quantity } = updateDto;
     const cartItem = await this.cartRepository.findOne({
       where: { id: cartId, userId },
@@ -153,6 +153,10 @@ export class OrdersService {
         where: { id: cartItem.bookId },
       });
 
+      if (!book) {
+        throw new NotFoundException('Kitap bulunamadı');
+      }
+
       const orderDetail = this.orderDetailsRepository.create({
         order: savedOrder,
         book,
@@ -167,10 +171,16 @@ export class OrdersService {
 
     await this.cartRepository.delete({ userId });
 
-    return this.orderRepository.findOne({
+    const finalOrder = await this.orderRepository.findOne({
       where: { id: savedOrder.id },
       relations: ['orderDetails', 'orderDetails.book'],
     });
+
+    if (!finalOrder) {
+      throw new NotFoundException('Sipariş bulunamadı');
+    }
+
+    return finalOrder;
   }
 
   async getUserOrders(userId: string): Promise<Order[]> {
