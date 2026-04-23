@@ -1,65 +1,214 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+const API = 'http://localhost:3000';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || 'Giriş başarısız');
+        return;
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userId', data.id);
+      localStorage.setItem('userName', data.name);
+      localStorage.setItem('userRole', data.role);
+
+      if (data.role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
+    } catch {
+      setError('Sunucuya bağlanılamadı');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1.5rem',
+      }}
+    >
+      {/* Background blobs */}
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          overflow: 'hidden',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            top: '-10%',
+            left: '-10%',
+            width: '500px',
+            height: '500px',
+            background: 'radial-gradient(circle, #db277730 0%, transparent 70%)',
+            borderRadius: '50%',
+          }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '-10%',
+            right: '-10%',
+            width: '400px',
+            height: '400px',
+            background: 'radial-gradient(circle, #9d174d25 0%, transparent 70%)',
+            borderRadius: '50%',
+          }}
+        />
+      </div>
+
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '420px' }}>
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '64px',
+              height: '64px',
+              borderRadius: '1rem',
+              background: 'linear-gradient(135deg, #db2777, #9d174d)',
+              fontSize: '2rem',
+              marginBottom: '1rem',
+              boxShadow: '0 8px 32px #db277750',
+            }}
+          >
+            📚
+          </div>
+          <h1
+            style={{
+              fontSize: '1.75rem',
+              fontWeight: '800',
+              background: 'linear-gradient(135deg, #f472b6, #db2777)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Kitabevi
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p style={{ color: '#9d6db0', fontSize: '0.9rem', marginTop: '0.25rem' }}>
+            Hesabınıza giriş yapın
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Card */}
+        <div className="glass" style={{ padding: '2rem' }}>
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div>
+              <label
+                style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', color: '#c084fc', marginBottom: '0.5rem' }}
+              >
+                E-posta
+              </label>
+              <input
+                className="input"
+                type="email"
+                placeholder="ornek@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
+            </div>
+
+            <div>
+              <label
+                style={{ display: 'block', fontSize: '0.85rem', fontWeight: '500', color: '#c084fc', marginBottom: '0.5rem' }}
+              >
+                Şifre
+              </label>
+              <input
+                className="input"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+              />
+            </div>
+
+            {error && (
+              <div
+                style={{
+                  padding: '0.75rem 1rem',
+                  borderRadius: '0.65rem',
+                  background: '#f8717120',
+                  border: '1px solid #f8717150',
+                  color: '#f87171',
+                  fontSize: '0.875rem',
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            <button className="btn-primary" type="submit" disabled={loading} style={{ marginTop: '0.5rem', padding: '0.8rem' }}>
+              {loading ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ display: 'inline-block', width: '16px', height: '16px', border: '2px solid #ffffff50', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                  Giriş yapılıyor...
+                </span>
+              ) : (
+                'Giriş Yap'
+              )}
+            </button>
+          </form>
+
+          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+            <p style={{ fontSize: '0.8rem', color: '#9d6db0' }}>
+              Demo: <span style={{ color: '#f472b6' }}>admin@kitabevi.com</span> / admin123
+            </p>
+            <p style={{ fontSize: '0.8rem', color: '#9d6db0', marginTop: '0.25rem' }}>
+              Müşteri: <span style={{ color: '#f472b6' }}>musteri@kitabevi.com</span> / musteri123
+            </p>
+          </div>
         </div>
-      </main>
-    </div>
+      </div>
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </main>
   );
 }
