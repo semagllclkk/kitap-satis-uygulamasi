@@ -11,11 +11,21 @@ import {
   OrderDetails,
   Cart,
 } from './entities';
+import { AuthModule } from './auth/auth.module';
+import { AuthorsModule } from './authors/authors.module';
+import { BooksModule } from './books/books.module';
+import { OrdersModule } from './orders/orders.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(databaseConfig),
     TypeOrmModule.forFeature([User, Author, Book, Order, OrderDetails, Cart]),
+    AuthModule,
+    AuthorsModule,
+    BooksModule,
+    OrdersModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

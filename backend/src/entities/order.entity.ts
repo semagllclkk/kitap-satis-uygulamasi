@@ -16,7 +16,7 @@ export class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'enum', enum: ['pending', 'completed', 'cancelled'], default: 'pending' })
+  @Column({ type: 'varchar', default: 'pending' })
   status: 'pending' | 'completed' | 'cancelled';
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })

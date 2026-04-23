@@ -23,7 +23,7 @@ export class User {
   @Column({ type: 'varchar' })
   password: string;
 
-  @Column({ type: 'enum', enum: ['customer', 'admin'], default: 'customer' })
+  @Column({ type: 'varchar', default: 'customer' })
   role: 'customer' | 'admin';
 
   @Column({ type: 'varchar', nullable: true })
