@@ -23,12 +23,12 @@ export class AdminService {
 
   async resetDatabase(): Promise<{ message: string }> {
     // Sil test verilerini
-    await this.cartRepository.delete({});
-    await this.orderDetailsRepository.delete({});
-    await this.orderRepository.delete({});
-    await this.bookRepository.delete({});
-    await this.authorRepository.delete({});
-    await this.userRepository.delete({});
+    await this.cartRepository.createQueryBuilder().delete().execute();
+    await this.orderDetailsRepository.createQueryBuilder().delete().execute();
+    await this.orderRepository.createQueryBuilder().delete().execute();
+    await this.bookRepository.createQueryBuilder().delete().execute();
+    await this.authorRepository.createQueryBuilder().delete().execute();
+    await this.userRepository.createQueryBuilder().delete().execute();
 
     // Admin ve test customer oluştur
     const adminPassword = await bcrypt.hash('admin123', 10);

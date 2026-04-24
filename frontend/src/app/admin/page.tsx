@@ -126,13 +126,23 @@ export default function AdminPage() {
     }
 
     async function saveBook() {
+        if (!form.title || !form.price || !form.stock || !form.authorId) {
+            alert('Lütfen zorunlu alanları (Başlık, Fiyat, Stok, Yazar) doldurun.');
+            return;
+        }
+        
         const token = localStorage.getItem('token');
         setSaving(true);
         const body = { ...form, price: parseFloat(form.price), stock: parseInt(form.stock) };
         const url = modal === 'edit' ? `${API}/books/${editing!.id}` : `${API}/books`;
         const method = modal === 'edit' ? 'PUT' : 'POST';
-        await fetch(url, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body) });
+        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body) });
         setSaving(false);
+        if (!res.ok) {
+            const data = await res.json();
+            alert(data.message || 'Bir hata oluştu');
+            return;
+        }
         setModal(null);
         showToast(modal === 'edit' ? 'Kitap güncellendi ✓' : 'Kitap eklendi ✓');
         fetchAll();
