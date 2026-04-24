@@ -36,7 +36,7 @@ export default function DashboardPage() {
 
     async function fetchBooks() {
         try {
-            const res = await fetch(`${API}/books`);
+            const res = await fetch(`${API}/books`, { cache: 'no-store' });
             const data = await res.json();
             setBooks(Array.isArray(data) ? data : []);
         } finally {

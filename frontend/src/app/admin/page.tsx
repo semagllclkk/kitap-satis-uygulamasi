@@ -99,10 +99,10 @@ export default function AdminPage() {
         const token = localStorage.getItem('token');
         try {
             const [ordersRes, booksRes, authorsRes, yearlyRes] = await Promise.all([
-                fetch(`${API}/orders`, { headers: { Authorization: `Bearer ${token}` } }),
-                fetch(`${API}/books`),
-                fetch(`${API}/authors`),
-                fetch(`${API}/orders/stats/yearly`, { headers: { Authorization: `Bearer ${token}` } }),
+                fetch(`${API}/orders`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
+                fetch(`${API}/books`, { cache: 'no-store' }),
+                fetch(`${API}/authors`, { cache: 'no-store' }),
+                fetch(`${API}/orders/stats/yearly`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
             ]);
             const ordersData = await ordersRes.json();
             const booksData = await booksRes.json();
