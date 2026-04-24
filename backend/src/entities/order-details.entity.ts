@@ -30,10 +30,10 @@ export class OrderDetails {
   @Column({ type: 'varchar' })
   orderId: string;
 
-  @ManyToOne(() => Book, (book) => book.orderDetails, { eager: true })
+  @ManyToOne(() => Book, (book) => book.orderDetails, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'bookId' })
   book: Book;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', nullable: true })
   bookId: string;
 }

@@ -5,11 +5,14 @@ import { useRouter } from 'next/navigation';
 import {
     LineChart,
     Line,
+    BarChart,
+    Bar,
     XAxis,
     YAxis,
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
+    Legend,
 } from 'recharts';
 import Navbar from '../components/Navbar';
 
@@ -36,6 +39,12 @@ interface Book {
     author?: { name: string };
 }
 
+interface YearlyStat {
+    month: string;
+    gelir: number;
+    siparis: number;
+}
+
 const EMPTY_FORM = { title: '', price: '', stock: '', isbn: '', imageUrl: '', publicationYear: '', publisher: '', authorId: '' };
 
 function getDayLabel(dateStr: string) {
@@ -46,22 +55,17 @@ function getDayLabel(dateStr: string) {
 function buildChartData(orders: Order[]) {
     const now = new Date();
     const days: { date: string; label: string; gelir: number }[] = [];
-
     for (let i = 13; i >= 0; i--) {
         const d = new Date(now);
         d.setDate(d.getDate() - i);
         const dateKey = d.toISOString().slice(0, 10);
         days.push({ date: dateKey, label: getDayLabel(d.toISOString()), gelir: 0 });
     }
-
     for (const order of orders) {
         const dateKey = new Date(order.createdAt).toISOString().slice(0, 10);
         const day = days.find((d) => d.date === dateKey);
-        if (day) {
-            day.gelir += Number(order.totalPrice);
-        }
+        if (day) day.gelir += Number(order.totalPrice);
     }
-
     return days;
 }
 
@@ -70,6 +74,7 @@ export default function AdminPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [books, setBooks] = useState<Book[]>([]);
     const [authors, setAuthors] = useState<Author[]>([]);
+    const [yearlyStats, setYearlyStats] = useState<YearlyStat[]>([]);
     const [loading, setLoading] = useState(true);
 
     // CRUD states
@@ -93,17 +98,20 @@ export default function AdminPage() {
     async function fetchAll() {
         const token = localStorage.getItem('token');
         try {
-            const [ordersRes, booksRes, authorsRes] = await Promise.all([
+            const [ordersRes, booksRes, authorsRes, yearlyRes] = await Promise.all([
                 fetch(`${API}/orders`, { headers: { Authorization: `Bearer ${token}` } }),
                 fetch(`${API}/books`),
                 fetch(`${API}/authors`),
+                fetch(`${API}/orders/stats/yearly`, { headers: { Authorization: `Bearer ${token}` } }),
             ]);
             const ordersData = await ordersRes.json();
             const booksData = await booksRes.json();
             const authorsData = await authorsRes.json();
+            const yearlyData = await yearlyRes.json();
             setOrders(Array.isArray(ordersData) ? ordersData : []);
             setBooks(Array.isArray(booksData) ? booksData : []);
             setAuthors(Array.isArray(authorsData) ? authorsData : []);
+            setYearlyStats(Array.isArray(yearlyData) ? yearlyData : []);
         } finally {
             setLoading(false);
         }
@@ -140,7 +148,6 @@ export default function AdminPage() {
 
     function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 2500); }
 
-    // Reset function
     async function handleReset() {
         const token = localStorage.getItem('token');
         setResetting(true);
@@ -156,19 +163,26 @@ export default function AdminPage() {
     }
 
     const chartData = buildChartData(orders);
+    const totalRevenue = orders.reduce((s, o) => s + Number(o.totalPrice), 0);
+    const totalYearRevenue = yearlyStats.reduce((s, m) => s + m.gelir, 0);
+    const totalYearOrders = yearlyStats.reduce((s, m) => s + m.siparis, 0);
 
     return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
             <Navbar />
 
             <main className="page" style={{ flex: 1, paddingBottom: '4rem' }}>
+                {/* Header */}
                 <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                    <h1 style={{ fontSize: '1.75rem', fontWeight: '800' }}>
-                        📦 Envanter Paneli
-                    </h1>
+                    <div>
+                        <h1 style={{ fontSize: '1.75rem', fontWeight: '800' }}>📦 Envanter Paneli</h1>
+                        <p style={{ color: '#9d6db0', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                            {new Date().getFullYear()} yılı yönetim ekranı
+                        </p>
+                    </div>
                     <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                        <button className="btn-ghost" onClick={() => router.push('/admin/authors')}>Yazar Yönetimi</button>
-                        <button className="btn-ghost" onClick={() => router.push('/admin/users')}>Kullanıcı Yönetimi</button>
+                        <button className="btn-ghost" onClick={() => router.push('/admin/authors')}>👤 Yazar Yönetimi</button>
+                        <button className="btn-ghost" onClick={() => router.push('/admin/users')}>👥 Kullanıcı Yönetimi</button>
                     </div>
                 </div>
 
@@ -176,13 +190,30 @@ export default function AdminPage() {
                     <div style={{ textAlign: 'center', padding: '4rem', color: '#9d6db0' }}>Yükleniyor...</div>
                 ) : (
                     <>
+                        {/* Stats Row */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                            {[
+                                { label: 'Toplam Kitap', value: books.length, icon: '📚', color: '#c084fc' },
+                                { label: 'Toplam Sipariş', value: orders.length, icon: '🛒', color: '#f472b6' },
+                                { label: 'Yıllık Sipariş', value: totalYearOrders, icon: '📅', color: '#60a5fa' },
+                                { label: 'Yıllık Gelir', value: `₺${totalYearRevenue.toFixed(0)}`, icon: '💰', color: '#34d399' },
+                                { label: 'Toplam Gelir', value: `₺${totalRevenue.toFixed(0)}`, icon: '📈', color: '#f59e0b' },
+                            ].map((s) => (
+                                <div key={s.label} className="card" style={{ padding: '1.25rem' }}>
+                                    <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{s.icon}</div>
+                                    <div style={{ fontSize: '1.4rem', fontWeight: '800', color: s.color }}>{s.value}</div>
+                                    <div style={{ fontSize: '0.75rem', color: '#9d6db0', marginTop: '0.2rem' }}>{s.label}</div>
+                                </div>
+                            ))}
+                        </div>
+
                         {/* Book List Table with CRUD */}
                         <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                                <h2 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#c084fc' }}>
-                                    Kitap Listesi
-                                </h2>
-                                <button className="btn-primary" onClick={openAdd} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>+ Yeni Kitap</button>
+                                <h2 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#c084fc' }}>📋 Kitap Listesi</h2>
+                                <button className="btn-primary" onClick={openAdd} style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
+                                    ＋ Yeni Kitap Ekle
+                                </button>
                             </div>
                             <div style={{ overflowX: 'auto', maxHeight: '340px' }}>
                                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
@@ -191,7 +222,8 @@ export default function AdminPage() {
                                             <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', color: '#9d6db0' }}>Kitap Adı</th>
                                             <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', color: '#9d6db0' }}>Yazar</th>
                                             <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', color: '#9d6db0' }}>Fiyat</th>
-                                            <th style={{ textAlign: 'center', padding: '0.5rem 0.75rem', color: '#9d6db0' }}>Kapak Görseli</th>
+                                            <th style={{ textAlign: 'center', padding: '0.5rem 0.75rem', color: '#9d6db0' }}>Stok</th>
+                                            <th style={{ textAlign: 'center', padding: '0.5rem 0.75rem', color: '#9d6db0' }}>Kapak</th>
                                             <th style={{ textAlign: 'center', padding: '0.5rem 0.75rem', color: '#9d6db0' }}>İşlemler</th>
                                         </tr>
                                     </thead>
@@ -201,6 +233,17 @@ export default function AdminPage() {
                                                 <td style={{ padding: '0.75rem', fontWeight: '600' }}>{b.title}</td>
                                                 <td style={{ padding: '0.75rem', color: '#c084fc' }}>{b.author?.name || '—'}</td>
                                                 <td style={{ padding: '0.75rem', color: '#f472b6', fontWeight: '700' }}>₺{Number(b.price).toFixed(2)}</td>
+                                                <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                                                    <span style={{
+                                                        padding: '0.2rem 0.6rem',
+                                                        borderRadius: '9999px',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: '600',
+                                                        background: b.stock === 0 ? '#f8717120' : '#34d39920',
+                                                        color: b.stock === 0 ? '#f87171' : '#34d399',
+                                                        border: `1px solid ${b.stock === 0 ? '#f8717150' : '#34d39950'}`,
+                                                    }}>{b.stock}</span>
+                                                </td>
                                                 <td style={{ padding: '0.5rem', textAlign: 'center' }}>
                                                     {b.imageUrl ? (
                                                         <img src={b.imageUrl} alt={b.title} style={{ height: '40px', width: '30px', objectFit: 'cover', borderRadius: '4px', display: 'inline-block' }} />
@@ -210,8 +253,30 @@ export default function AdminPage() {
                                                 </td>
                                                 <td style={{ padding: '0.75rem', textAlign: 'center' }}>
                                                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                                                        <button className="btn-ghost" onClick={() => openEdit(b)} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}>Düzenle</button>
-                                                        <button className="btn-danger" onClick={() => removeBook(b.id)} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}>Sil</button>
+                                                        <button
+                                                            onClick={() => openEdit(b)}
+                                                            style={{
+                                                                padding: '0.35rem 0.75rem', fontSize: '0.75rem',
+                                                                borderRadius: '0.5rem', border: '1px solid #c084fc50',
+                                                                background: '#c084fc15', color: '#c084fc',
+                                                                cursor: 'pointer', fontWeight: '600',
+                                                                transition: 'all 0.15s',
+                                                            }}
+                                                            onMouseOver={e => { e.currentTarget.style.background = '#c084fc30'; e.currentTarget.style.borderColor = '#c084fc'; }}
+                                                            onMouseOut={e => { e.currentTarget.style.background = '#c084fc15'; e.currentTarget.style.borderColor = '#c084fc50'; }}
+                                                        >✏️ Düzenle</button>
+                                                        <button
+                                                            onClick={() => removeBook(b.id)}
+                                                            style={{
+                                                                padding: '0.35rem 0.75rem', fontSize: '0.75rem',
+                                                                borderRadius: '0.5rem', border: '1px solid #f8717150',
+                                                                background: '#f8717115', color: '#f87171',
+                                                                cursor: 'pointer', fontWeight: '600',
+                                                                transition: 'all 0.15s',
+                                                            }}
+                                                            onMouseOver={e => { e.currentTarget.style.background = '#f8717130'; e.currentTarget.style.borderColor = '#f87171'; }}
+                                                            onMouseOut={e => { e.currentTarget.style.background = '#f8717115'; e.currentTarget.style.borderColor = '#f8717150'; }}
+                                                        >🗑️ Sil</button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -221,45 +286,66 @@ export default function AdminPage() {
                             </div>
                         </div>
 
-                        {/* Line Chart */}
-                        <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
-                            <h2 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.25rem', color: '#c084fc' }}>
-                                Aylık Gelir Grafiği
-                            </h2>
-                            <ResponsiveContainer width="100%" height={240}>
-                                <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#3d1f4a" vertical={false} />
-                                    <XAxis dataKey="label" tick={{ fill: '#9d6db0', fontSize: 11 }} axisLine={false} tickLine={false} />
-                                    <YAxis tick={{ fill: '#9d6db0', fontSize: 11 }} axisLine={false} tickLine={false} />
-                                    <Tooltip
-                                        contentStyle={{ background: '#1a0f1e', border: '1px solid #3d1f4a', borderRadius: '0.5rem', color: '#fce7f3' }}
-                                        formatter={(v: any) => [`₺${Number(v).toFixed(2)}`, 'Gelir']}
-                                    />
-                                    <Line type="monotone" dataKey="gelir" stroke="#f472b6" strokeWidth={3} dot={{ r: 4, fill: '#db2777', stroke: '#f472b6', strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                                </LineChart>
-                            </ResponsiveContainer>
+                        {/* Charts Row */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+                            {/* Daily Line Chart */}
+                            <div className="card" style={{ padding: '1.5rem' }}>
+                                <h2 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.25rem', color: '#c084fc' }}>
+                                    📊 Son 14 Günlük Gelir
+                                </h2>
+                                <ResponsiveContainer width="100%" height={220}>
+                                    <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#3d1f4a" vertical={false} />
+                                        <XAxis dataKey="label" tick={{ fill: '#9d6db0', fontSize: 11 }} axisLine={false} tickLine={false} />
+                                        <YAxis tick={{ fill: '#9d6db0', fontSize: 11 }} axisLine={false} tickLine={false} />
+                                        <Tooltip
+                                            contentStyle={{ background: '#1a0f1e', border: '1px solid #3d1f4a', borderRadius: '0.5rem', color: '#fce7f3' }}
+                                            formatter={(v: any) => [`₺${Number(v).toFixed(2)}`, 'Gelir']}
+                                        />
+                                        <Line type="monotone" dataKey="gelir" stroke="#f472b6" strokeWidth={3} dot={{ r: 4, fill: '#db2777', stroke: '#f472b6', strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+
+                            {/* Yearly Bar Chart */}
+                            <div className="card" style={{ padding: '1.5rem' }}>
+                                <h2 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.25rem', color: '#c084fc' }}>
+                                    📅 {new Date().getFullYear()} Yıllık Satışlar
+                                </h2>
+                                <ResponsiveContainer width="100%" height={220}>
+                                    <BarChart data={yearlyStats} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#3d1f4a" vertical={false} />
+                                        <XAxis dataKey="month" tick={{ fill: '#9d6db0', fontSize: 11 }} axisLine={false} tickLine={false} />
+                                        <YAxis tick={{ fill: '#9d6db0', fontSize: 11 }} axisLine={false} tickLine={false} />
+                                        <Tooltip
+                                            contentStyle={{ background: '#1a0f1e', border: '1px solid #3d1f4a', borderRadius: '0.5rem', color: '#fce7f3' }}
+                                            formatter={(v: any, name: string) => [
+                                                name === 'gelir' ? `₺${Number(v).toFixed(2)}` : v,
+                                                name === 'gelir' ? 'Gelir' : 'Sipariş',
+                                            ]}
+                                        />
+                                        <Legend formatter={(v) => v === 'gelir' ? 'Gelir (₺)' : 'Sipariş Sayısı'} wrapperStyle={{ color: '#9d6db0', fontSize: '0.75rem' }} />
+                                        <Bar dataKey="gelir" fill="#db2777" radius={[4, 4, 0, 0]} opacity={0.85} />
+                                        <Bar dataKey="siparis" fill="#7c3aed" radius={[4, 4, 0, 0]} opacity={0.7} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
                         </div>
                     </>
                 )}
             </main>
 
-            {/* Footer with Reset Button */}
+            {/* Footer */}
             <footer style={{ background: 'var(--color-surface-2)', borderTop: '1px solid var(--color-border)', padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: '#9d6db0', fontSize: '0.9rem', fontWeight: '600' }}>Kitabevi Dashboard</span>
                 <button
                     onClick={() => setShowResetModal(true)}
                     disabled={resetting}
-                    style={{
-                        padding: '0.6rem 1.2rem', borderRadius: '0.5rem',
-                        background: 'transparent', color: '#f87171',
-                        border: '1px solid #f8717180', fontWeight: '600',
-                        cursor: 'pointer', fontSize: '0.85rem',
-                        opacity: resetting ? 0.6 : 1, transition: 'all 0.2s'
-                    }}
+                    style={{ padding: '0.6rem 1.2rem', borderRadius: '0.5rem', background: 'transparent', color: '#f87171', border: '1px solid #f8717180', fontWeight: '600', cursor: 'pointer', fontSize: '0.85rem', opacity: resetting ? 0.6 : 1, transition: 'all 0.2s' }}
                     onMouseOver={(e) => { e.currentTarget.style.background = '#f8717115'; e.currentTarget.style.borderColor = '#f87171'; }}
                     onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = '#f8717180'; }}
                 >
-                    {resetting ? 'Sıfırlanıyor...' : 'Admin Reset'}
+                    {resetting ? 'Sıfırlanıyor...' : '⚠️ Admin Reset'}
                 </button>
             </footer>
 
@@ -267,7 +353,7 @@ export default function AdminPage() {
             {modal && (
                 <div style={{ position: 'fixed', inset: 0, background: '#00000090', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '1rem' }}>
                     <div className="glass" style={{ width: '100%', maxWidth: '520px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
-                        <h2 style={{ fontWeight: '800', marginBottom: '1.5rem', color: '#f472b6' }}>{modal === 'add' ? '+ Yeni Kitap' : '✏️ Kitabı Düzenle'}</h2>
+                        <h2 style={{ fontWeight: '800', marginBottom: '1.5rem', color: '#f472b6' }}>{modal === 'add' ? '＋ Yeni Kitap' : '✏️ Kitabı Düzenle'}</h2>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
                             {[['title', 'Başlık *'], ['price', 'Fiyat *'], ['stock', 'Stok *'], ['isbn', 'ISBN'], ['imageUrl', 'Kapak URL'], ['publicationYear', 'Yayın Yılı'], ['publisher', 'Yayınevi']].map(([k, label]) => (
                                 <div key={k}>
@@ -284,7 +370,7 @@ export default function AdminPage() {
                             </div>
                         </div>
                         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
-                            <button className="btn-primary" onClick={saveBook} disabled={saving} style={{ flex: 1 }}>{saving ? '…' : 'Kaydet'}</button>
+                            <button className="btn-primary" onClick={saveBook} disabled={saving} style={{ flex: 1 }}>{saving ? '…' : '💾 Kaydet'}</button>
                             <button className="btn-ghost" onClick={() => setModal(null)} style={{ flex: 1 }}>İptal</button>
                         </div>
                     </div>
@@ -301,10 +387,7 @@ export default function AdminPage() {
                             Tüm test verileri silinip, sistem temiz demo verileriyle baştan kurulacaktır. Onaylıyor musunuz?
                         </p>
                         <div style={{ display: 'flex', gap: '0.75rem' }}>
-                            <button
-                                onClick={handleReset}
-                                style={{ flex: 1, padding: '0.8rem', borderRadius: '0.75rem', background: 'linear-gradient(135deg, #7e22ce, #9d174d)', color: '#fff', fontWeight: '700', border: 'none', cursor: 'pointer' }}
-                            >
+                            <button onClick={handleReset} style={{ flex: 1, padding: '0.8rem', borderRadius: '0.75rem', background: 'linear-gradient(135deg, #7e22ce, #9d174d)', color: '#fff', fontWeight: '700', border: 'none', cursor: 'pointer' }}>
                                 Evet, Sıfırla
                             </button>
                             <button className="btn-ghost" onClick={() => setShowResetModal(false)} style={{ flex: 1 }}>İptal</button>

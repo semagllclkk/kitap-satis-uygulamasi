@@ -33,7 +33,7 @@ export class AdminService {
     // Admin ve test customer oluştur
     const adminPassword = await bcrypt.hash('admin123', 10);
     const admin = this.userRepository.create({
-      email: 'admin@bookstore.com',
+      email: 'admin@kitabevi.com',
       name: 'Admin Kullanıcı',
       password: adminPassword,
       role: 'admin',
@@ -42,7 +42,7 @@ export class AdminService {
 
     const customerPassword = await bcrypt.hash('customer123', 10);
     const customer = this.userRepository.create({
-      email: 'customer@bookstore.com',
+      email: 'musteri@kitabevi.com',
       name: 'Test Müşteri',
       password: customerPassword,
       role: 'customer',

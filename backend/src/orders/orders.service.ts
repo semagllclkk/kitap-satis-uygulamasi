@@ -210,4 +210,31 @@ export class OrdersService {
 
     return order;
   }
+
+  async getYearlySales(): Promise<{ month: string; gelir: number; siparis: number }[]> {
+    const now = new Date();
+    const year = now.getFullYear();
+    const MONTHS = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+
+    const result: { month: string; gelir: number; siparis: number }[] = MONTHS.map((m) => ({
+      month: m,
+      gelir: 0,
+      siparis: 0,
+    }));
+
+    const allOrders = await this.orderRepository.find({
+      order: { createdAt: 'ASC' },
+    });
+
+    for (const order of allOrders) {
+      const d = new Date(order.createdAt);
+      if (d.getFullYear() === year) {
+        const idx = d.getMonth();
+        result[idx].gelir += Number(order.totalPrice);
+        result[idx].siparis += 1;
+      }
+    }
+
+    return result;
+  }
 }

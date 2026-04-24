@@ -79,6 +79,12 @@ export class OrdersController {
     return this.ordersService.getAllOrders();
   }
 
+  @Get('stats/yearly')
+  @ApiOperation({ summary: 'Yıllık satış istatistikleri (Admin)' })
+  getYearlySales(): Promise<{ month: string; gelir: number; siparis: number }[]> {
+    return this.ordersService.getYearlySales();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Siparişi ID ile getir' })
   getOrderById(@Param('id') id: string): Promise<Order> {
