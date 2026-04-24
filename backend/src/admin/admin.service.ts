@@ -22,35 +22,60 @@ export class AdminService {
   ) {}
 
   async resetDatabase(): Promise<{ message: string }> {
-    // Sil test verilerini
-    await this.cartRepository.createQueryBuilder().delete().execute();
-    await this.orderDetailsRepository.createQueryBuilder().delete().execute();
-    await this.orderRepository.createQueryBuilder().delete().execute();
-    await this.bookRepository.createQueryBuilder().delete().execute();
-    await this.authorRepository.createQueryBuilder().delete().execute();
-    await this.userRepository.createQueryBuilder().delete().execute();
+    const demoAuthors = ['Orhan Pamuk', 'Ahmet Ümit', 'Elif Şafak'];
+    const demoBooks = ['Kar', 'Beyaz Kale', 'Dehşet', '10 Dakika 38 Saniye', 'İstanbul Müzesi'];
 
-    // Admin ve test customer oluştur
-    const adminPassword = await bcrypt.hash('admin123', 10);
-    const admin = this.userRepository.create({
-      email: 'admin@kitabevi.com',
-      name: 'Admin Kullanıcı',
-      password: adminPassword,
-      role: 'admin',
-    });
-    await this.userRepository.save(admin);
+    // 1. Random Kitapları Sil
+    const randomBooks = await this.bookRepository.createQueryBuilder('book')
+      .where('book.title NOT IN (:...titles)', { titles: demoBooks })
+      .getMany();
 
-    const customerPassword = await bcrypt.hash('customer123', 10);
-    const customer = this.userRepository.create({
-      email: 'musteri@kitabevi.com',
-      name: 'Test Müşteri',
-      password: customerPassword,
-      role: 'customer',
-    });
-    await this.userRepository.save(customer);
+    if (randomBooks.length > 0) {
+      const bookIds = randomBooks.map((b) => b.id);
+
+      const orderDetails = await this.orderDetailsRepository.createQueryBuilder('od')
+        .where('od.bookId IN (:...bookIds)', { bookIds })
+        .getMany();
+
+      if (orderDetails.length > 0) {
+        for (const od of orderDetails) {
+          const order = await this.orderRepository.findOne({ where: { id: od.orderId } });
+          if (order) {
+            order.totalPrice -= Number(od.price) * od.quantity;
+            order.totalQuantity -= od.quantity;
+            await this.orderRepository.save(order);
+          }
+        }
+        await this.orderDetailsRepository.delete(orderDetails.map((od) => od.id));
+      }
+
+      await this.cartRepository.createQueryBuilder()
+        .where('bookId IN (:...bookIds)', { bookIds })
+        .delete()
+        .execute();
+
+      await this.bookRepository.delete(bookIds);
+    }
+
+    // 2. Random Yazarları Sil
+    const randomAuthors = await this.authorRepository.createQueryBuilder('author')
+      .where('author.name NOT IN (:...names)', { names: demoAuthors })
+      .getMany();
+
+    if (randomAuthors.length > 0) {
+      await this.authorRepository.delete(randomAuthors.map((a) => a.id));
+    }
+
+    // 3. İçi boşalan siparişleri sil
+    await this.orderRepository.createQueryBuilder()
+      .where('totalQuantity <= 0')
+      .delete()
+      .execute();
+
+    // Not: Artık kullanıcıları veya geçerli siparişleri silmiyoruz!
 
     return {
-      message: 'Veritabanı sıfırlandı. Admin ve test müşteri oluşturuldu.',
+      message: 'Sadece test amacıyla eklenen random veriler temizlendi.',
     };
   }
 
@@ -151,9 +176,61 @@ export class AdminService {
       },
     ];
 
+    const savedBooks: Book[] = [];
     for (const bookData of books) {
       const book = this.bookRepository.create(bookData);
-      await this.bookRepository.save(book);
+      savedBooks.push(await this.bookRepository.save(book));
+    }
+
+    // Demo Siparişler (Satış verisi grafikleri için)
+    const customer = await this.userRepository.findOne({ where: { email: 'musteri@kitabevi.com' } });
+    if (customer && savedBooks.length > 0) {
+      const orders = [];
+      const currentYear = new Date().getFullYear();
+      
+      // Geçmiş aylara ait rastgele siparişler oluştur
+      for (let month = 0; month < 12; month++) {
+        // Her ay için 1-3 arası rastgele sipariş
+        const numOrders = Math.floor(Math.random() * 3) + 1;
+        
+        for (let i = 0; i < numOrders; i++) {
+          const book1 = savedBooks[Math.floor(Math.random() * savedBooks.length)];
+          const book2 = savedBooks[Math.floor(Math.random() * savedBooks.length)];
+          
+          const orderDate = new Date(currentYear, month, Math.floor(Math.random() * 28) + 1);
+          
+          const order = this.orderRepository.create({
+            user: customer,
+            userId: customer.id,
+            status: 'completed',
+            totalPrice: Number(book1.price) + Number(book2.price),
+            totalQuantity: 2,
+            createdAt: orderDate,
+            updatedAt: orderDate,
+          });
+          
+          const savedOrder = await this.orderRepository.save(order);
+          
+          await this.orderDetailsRepository.save([
+            this.orderDetailsRepository.create({
+              order: savedOrder,
+              orderId: savedOrder.id,
+              book: book1,
+              bookId: book1.id,
+              quantity: 1,
+              price: book1.price,
+            }),
+            this.orderDetailsRepository.create({
+              order: savedOrder,
+              orderId: savedOrder.id,
+              book: book2,
+              bookId: book2.id,
+              quantity: 1,
+              price: book2.price,
+            })
+          ]);
+        }
+      }
     }
 
     return { message: 'Demo veriler başarıyla eklendi' };
