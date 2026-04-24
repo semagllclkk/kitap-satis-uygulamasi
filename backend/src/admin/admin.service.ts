@@ -55,6 +55,12 @@ export class AdminService {
   }
 
   async seedDemoData(): Promise<{ message: string }> {
+    // Zaten veri varsa tekrar ekleme
+    const existingCount = await this.authorRepository.count();
+    if (existingCount > 0) {
+      return { message: 'Demo veriler zaten mevcut, atlandı.' };
+    }
+
     // Demo yazarlar
     const author1 = this.authorRepository.create({
       name: 'Orhan Pamuk',

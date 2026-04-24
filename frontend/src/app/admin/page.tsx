@@ -319,9 +319,9 @@ export default function AdminPage() {
                                         <YAxis tick={{ fill: '#9d6db0', fontSize: 11 }} axisLine={false} tickLine={false} />
                                         <Tooltip
                                             contentStyle={{ background: '#1a0f1e', border: '1px solid #3d1f4a', borderRadius: '0.5rem', color: '#fce7f3' }}
-                                            formatter={(v: any, name: string) => [
+                                            formatter={(v: any, name?: string | number) => [
                                                 name === 'gelir' ? `₺${Number(v).toFixed(2)}` : v,
-                                                name === 'gelir' ? 'Gelir' : 'Sipariş',
+                                                name === 'gelir' ? 'Gelir (₺)' : 'Sipariş Sayısı',
                                             ]}
                                         />
                                         <Legend formatter={(v) => v === 'gelir' ? 'Gelir (₺)' : 'Sipariş Sayısı'} wrapperStyle={{ color: '#9d6db0', fontSize: '0.75rem' }} />
