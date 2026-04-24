@@ -25,6 +25,7 @@ export class BooksService {
     const book = this.bookRepository.create({
       ...createBookDto,
       author,
+      authorId: author.id,
     });
 
     return this.bookRepository.save(book);
