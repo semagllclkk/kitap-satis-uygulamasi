@@ -31,6 +31,7 @@ export default function AdminBooksPage() {
     const [form, setForm] = useState(EMPTY_FORM);
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState('');
+    const [toastType, setToastType] = useState<'success' | 'error'>('success');
 
     useEffect(() => {
         const role = localStorage.getItem('userRole');
@@ -65,7 +66,7 @@ export default function AdminBooksPage() {
         await fetch(url, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body) });
         setSaving(false);
         setModal(null);
-        showToast(modal === 'edit' ? 'Kitap güncellendi ✓' : 'Kitap eklendi ✓');
+        showToast(modal === 'edit' ? 'Kitap güncellendi ✓' : 'Kitap eklendi ✓', 'success');
         fetchAll();
     }
 
@@ -73,11 +74,18 @@ export default function AdminBooksPage() {
         if (!confirm('Bu kitabı silmek istiyor musunuz?')) return;
         const token = localStorage.getItem('token');
         await fetch(`${API}/books/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-        showToast('Silindi');
+        showToast('Silindi ✓', 'success');
         fetchAll();
     }
 
-    function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 2500); }
+    function showToast(msg: string, type: 'success' | 'error' = 'success') {
+        setToast(''); // reset animation
+        setTimeout(() => {
+            setToastType(type);
+            setToast(msg);
+        }, 10);
+        setTimeout(() => setToast(''), 3000);
+    }
 
     return (
         <div style={{ minHeight: '100vh' }}>
@@ -148,9 +156,31 @@ export default function AdminBooksPage() {
                 )}
 
                 {toast && (
-                    <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', background: '#1a0f1e', border: '1px solid #db277750', color: '#f472b6', padding: '0.75rem 1.25rem', borderRadius: '0.75rem', fontWeight: '600', zIndex: 400 }}>{toast}</div>
+                    <div style={{
+                        position: 'fixed', bottom: '2rem', right: '2rem', background: '#1a0f1e',
+                        border: `1px solid ${toastType === 'success' ? '#10b981' : '#ef4444'}`,
+                        color: toastType === 'success' ? '#10b981' : '#ef4444',
+                        padding: '0.75rem 1.25rem', borderRadius: '0.75rem', fontWeight: '600', zIndex: 400,
+                        boxShadow: `0 8px 32px ${toastType === 'success' ? '#10b98130' : '#ef444430'}`,
+                        overflow: 'hidden', animation: 'fadeIn 0.2s ease'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span>{toastType === 'success' ? '✅' : '⚠️'}</span>
+                            <span>{toast}</span>
+                        </div>
+                        {/* Timer progress bar at the bottom */}
+                        <div style={{
+                            position: 'absolute', bottom: 0, left: 0, height: '3px',
+                            background: toastType === 'success' ? '#10b981' : '#ef4444',
+                            animation: 'shrink 3s linear forwards'
+                        }} />
+                    </div>
                 )}
             </main>
+            <style>{`
+                @keyframes shrink { from { width: '100%'; } to { width: '0%'; } }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+            `}</style>
         </div>
     );
 }

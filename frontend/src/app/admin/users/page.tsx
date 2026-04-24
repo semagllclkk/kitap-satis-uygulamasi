@@ -13,7 +13,7 @@ export default function AdminUsersPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState('');
-    const [toastColor, setToastColor] = useState('#f472b6');
+    const [toastType, setToastType] = useState<'success' | 'error'>('success');
     const [resetting, setResetting] = useState(false);
     const [showResetModal, setShowResetModal] = useState(false);
 
@@ -33,7 +33,7 @@ export default function AdminUsersPage() {
         if (!confirm('Bu kullanıcıyı silmek istiyor musunuz?')) return;
         const token = localStorage.getItem('token');
         await fetch(`${API}/admin/users/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-        showToast('Kullanıcı silindi', '#f472b6');
+        showToast('Kullanıcı silindi ✓', 'success');
         fetchUsers();
     }
 
@@ -44,18 +44,22 @@ export default function AdminUsersPage() {
         try {
             await fetch(`${API}/admin/reset`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
             await fetch(`${API}/admin/seed-demo`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-            showToast('✅ Sistem sıfırlandı ve demo verileri yüklendi!', '#34d399');
+            showToast('✅ Test verileri temizlendi!', 'success');
             fetchUsers();
         } catch {
-            showToast('Hata oluştu', '#f87171');
+            showToast('Hata oluştu', 'error');
         } finally {
             setResetting(false);
         }
     }
 
-    function showToast(msg: string, color: string) {
-        setToast(msg); setToastColor(color);
-        setTimeout(() => setToast(''), 3500);
+    function showToast(msg: string, type: 'success' | 'error' = 'success') {
+        setToast(''); // reset animation
+        setTimeout(() => {
+            setToastType(type);
+            setToast(msg);
+        }, 10);
+        setTimeout(() => setToast(''), 3000);
     }
 
     return (
@@ -143,8 +147,30 @@ export default function AdminUsersPage() {
             )}
 
             {toast && (
-                <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', background: '#1a0f1e', border: `1px solid ${toastColor}50`, color: toastColor, padding: '0.75rem 1.25rem', borderRadius: '0.75rem', fontWeight: '600', zIndex: 400, maxWidth: '360px' }}>{toast}</div>
+                <div style={{
+                    position: 'fixed', bottom: '2rem', right: '2rem', background: '#1a0f1e',
+                    border: `1px solid ${toastType === 'success' ? '#10b981' : '#ef4444'}`,
+                    color: toastType === 'success' ? '#10b981' : '#ef4444',
+                    padding: '0.75rem 1.25rem', borderRadius: '0.75rem', fontWeight: '600', zIndex: 400,
+                    boxShadow: `0 8px 32px ${toastType === 'success' ? '#10b98130' : '#ef444430'}`,
+                    overflow: 'hidden', animation: 'fadeIn 0.2s ease', maxWidth: '360px'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span>{toastType === 'success' ? '✅' : '⚠️'}</span>
+                        <span>{toast}</span>
+                    </div>
+                    {/* Timer progress bar at the bottom */}
+                    <div style={{
+                        position: 'absolute', bottom: 0, left: 0, height: '3px',
+                        background: toastType === 'success' ? '#10b981' : '#ef4444',
+                        animation: 'shrink 3s linear forwards'
+                    }} />
+                </div>
             )}
+            <style>{`
+                @keyframes shrink { from { width: '100%'; } to { width: '0%'; } }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+            `}</style>
         </div>
     );
 }
