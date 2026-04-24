@@ -95,6 +95,7 @@ export default function AdminPage() {
     // Reset states
     const [resetting, setResetting] = useState(false);
     const [showResetModal, setShowResetModal] = useState(false);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
     useEffect(() => {
         const role = localStorage.getItem('userRole');
@@ -156,11 +157,12 @@ export default function AdminPage() {
         fetchAll();
     }
 
-    async function removeBook(id: string) {
-        if (!confirm('Bu kitabı silmek istiyor musunuz?')) return;
+    async function removeBook() {
+        if (!deleteConfirmId) return;
         const token = localStorage.getItem('token');
-        await fetch(`${API}/books/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-        showToast('Silindi ✓');
+        await fetch(`${API}/books/${deleteConfirmId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        setDeleteConfirmId(null);
+        showToast('Silindi ✓', 'success');
         fetchAll();
     }
     function showToast(msg: string, type: 'success' | 'error' = 'success') {
@@ -289,7 +291,7 @@ export default function AdminPage() {
                                                             onMouseOut={e => { e.currentTarget.style.background = '#c084fc15'; e.currentTarget.style.borderColor = '#c084fc50'; }}
                                                         >✏️ Düzenle</button>
                                                         <button
-                                                            onClick={() => removeBook(b.id)}
+                                                            onClick={() => setDeleteConfirmId(b.id)}
                                                             style={{
                                                                 padding: '0.35rem 0.75rem', fontSize: '0.75rem',
                                                                 borderRadius: '0.5rem', border: '1px solid #f8717150',
@@ -444,6 +446,25 @@ export default function AdminPage() {
                         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
                             <button className="btn-primary" onClick={saveBook} disabled={saving} style={{ flex: 1 }}>{saving ? '…' : '💾 Kaydet'}</button>
                             <button className="btn-ghost" onClick={() => setModal(null)} style={{ flex: 1 }}>İptal</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirm Modal */}
+            {deleteConfirmId && (
+                <div style={{ position: 'fixed', inset: 0, background: '#00000090', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '1rem', animation: 'fadeIn 0.2s ease' }}>
+                    <div className="glass" style={{ maxWidth: '400px', width: '100%', padding: '2rem', textAlign: 'center' }}>
+                        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🗑️</div>
+                        <h2 style={{ fontWeight: '800', marginBottom: '0.75rem', color: '#f87171' }}>Silmek İstediğinize Emin Misiniz?</h2>
+                        <p style={{ color: '#c084fc', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+                            Bu kayıt kalıcı olarak silinecek ve geri alınamayacaktır.
+                        </p>
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                            <button onClick={removeBook} style={{ flex: 1, padding: '0.8rem', borderRadius: '0.75rem', background: '#ef4444', color: '#fff', fontWeight: '700', border: 'none', cursor: 'pointer' }}>
+                                Evet, Sil
+                            </button>
+                            <button className="btn-ghost" onClick={() => setDeleteConfirmId(null)} style={{ flex: 1 }}>İptal</button>
                         </div>
                     </div>
                 </div>

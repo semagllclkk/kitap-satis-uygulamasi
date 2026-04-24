@@ -16,6 +16,7 @@ export default function AdminUsersPage() {
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
     const [resetting, setResetting] = useState(false);
     const [showResetModal, setShowResetModal] = useState(false);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
     useEffect(() => {
         if (localStorage.getItem('userRole') !== 'admin') { router.push('/'); return; }
@@ -29,10 +30,11 @@ export default function AdminUsersPage() {
         setLoading(false);
     }
 
-    async function removeUser(id: string) {
-        if (!confirm('Bu kullanıcıyı silmek istiyor musunuz?')) return;
+    async function removeUser() {
+        if (!deleteConfirmId) return;
         const token = localStorage.getItem('token');
-        await fetch(`${API}/admin/users/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        await fetch(`${API}/admin/users/${deleteConfirmId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        setDeleteConfirmId(null);
         showToast('Kullanıcı silindi ✓', 'success');
         fetchUsers();
     }
@@ -113,7 +115,7 @@ export default function AdminUsersPage() {
                                         <td style={{ padding: '0.65rem 0.75rem', color: '#9d6db0' }}>{new Date(u.createdAt).toLocaleDateString('tr-TR')}</td>
                                         <td style={{ padding: '0.65rem 0.75rem' }}>
                                             {u.role !== 'admin' && (
-                                                <button className="btn-danger" onClick={() => removeUser(u.id)} style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem' }}>Sil</button>
+                                                <button className="btn-danger" onClick={() => setDeleteConfirmId(u.id)} style={{ padding: '0.3rem 0.7rem', fontSize: '0.8rem' }}>Sil</button>
                                             )}
                                         </td>
                                     </tr>
@@ -123,6 +125,25 @@ export default function AdminUsersPage() {
                     </div>
                 )}
             </main>
+
+            {/* Delete Confirm Modal */}
+            {deleteConfirmId && (
+                <div style={{ position: 'fixed', inset: 0, background: '#00000090', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '1rem', animation: 'fadeIn 0.2s ease' }}>
+                    <div className="glass" style={{ maxWidth: '400px', width: '100%', padding: '2rem', textAlign: 'center' }}>
+                        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🗑️</div>
+                        <h2 style={{ fontWeight: '800', marginBottom: '0.75rem', color: '#f87171' }}>Silmek İstediğinize Emin Misiniz?</h2>
+                        <p style={{ color: '#c084fc', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+                            Bu kayıt kalıcı olarak silinecek ve geri alınamayacaktır.
+                        </p>
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                            <button onClick={removeUser} style={{ flex: 1, padding: '0.8rem', borderRadius: '0.75rem', background: '#ef4444', color: '#fff', fontWeight: '700', border: 'none', cursor: 'pointer' }}>
+                                Evet, Sil
+                            </button>
+                            <button className="btn-ghost" onClick={() => setDeleteConfirmId(null)} style={{ flex: 1 }}>İptal</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Reset Confirm Modal */}
             {showResetModal && (

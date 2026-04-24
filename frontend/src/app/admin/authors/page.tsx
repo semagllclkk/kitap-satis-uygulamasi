@@ -19,6 +19,7 @@ export default function AdminAuthorsPage() {
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
     useEffect(() => {
         if (localStorage.getItem('userRole') !== 'admin') { router.push('/'); return; }
@@ -45,10 +46,11 @@ export default function AdminAuthorsPage() {
         fetchAuthors();
     }
 
-    async function remove(id: string) {
-        if (!confirm('Bu yazarı silmek istiyor musunuz?')) return;
+    async function remove() {
+        if (!deleteConfirmId) return;
         const token = localStorage.getItem('token');
-        await fetch(`${API}/authors/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        await fetch(`${API}/authors/${deleteConfirmId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        setDeleteConfirmId(null);
         showToast('Silindi ✓', 'success');
         fetchAuthors();
     }
@@ -86,7 +88,7 @@ export default function AdminAuthorsPage() {
                                 {a.biography && <p style={{ fontSize: '0.8rem', color: '#c084fc', lineHeight: 1.5, marginBottom: '1rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{a.biography}</p>}
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                                     <button className="btn-ghost" onClick={() => openEdit(a)} style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem' }}>Düzenle</button>
-                                    <button className="btn-danger" onClick={() => remove(a.id)} style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem' }}>Sil</button>
+                                    <button className="btn-danger" onClick={() => setDeleteConfirmId(a.id)} style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem' }}>Sil</button>
                                 </div>
                             </div>
                         ))}
@@ -112,6 +114,25 @@ export default function AdminAuthorsPage() {
                             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
                                 <button className="btn-primary" onClick={save} disabled={saving} style={{ flex: 1 }}>{saving ? '…' : 'Kaydet'}</button>
                                 <button className="btn-ghost" onClick={() => setModal(null)} style={{ flex: 1 }}>İptal</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Delete Confirm Modal */}
+                {deleteConfirmId && (
+                    <div style={{ position: 'fixed', inset: 0, background: '#00000090', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '1rem', animation: 'fadeIn 0.2s ease' }}>
+                        <div className="glass" style={{ maxWidth: '400px', width: '100%', padding: '2rem', textAlign: 'center' }}>
+                            <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🗑️</div>
+                            <h2 style={{ fontWeight: '800', marginBottom: '0.75rem', color: '#f87171' }}>Silmek İstediğinize Emin Misiniz?</h2>
+                            <p style={{ color: '#c084fc', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+                                Bu kayıt kalıcı olarak silinecek ve geri alınamayacaktır.
+                            </p>
+                            <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                <button onClick={remove} style={{ flex: 1, padding: '0.8rem', borderRadius: '0.75rem', background: '#ef4444', color: '#fff', fontWeight: '700', border: 'none', cursor: 'pointer' }}>
+                                    Evet, Sil
+                                </button>
+                                <button className="btn-ghost" onClick={() => setDeleteConfirmId(null)} style={{ flex: 1 }}>İptal</button>
                             </div>
                         </div>
                     </div>
