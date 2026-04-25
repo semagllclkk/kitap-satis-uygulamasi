@@ -9,36 +9,95 @@ const API = 'http://localhost:3000';
 interface Book {
     id: string;
     title: string;
+    name?: string;
     price: number;
     stock: number;
     imageUrl?: string;
     description?: string;
-    publisher?: string;
-    publicationYear?: string;
-    author?: { name: string };
+    genre?: string;
+    author?: { id: string; name: string };
+}
+
+interface Author {
+    id: string;
+    name: string;
 }
 
 export default function DashboardPage() {
     const router = useRouter();
     const [books, setBooks] = useState<Book[]>([]);
+    const [authors, setAuthors] = useState<Author[]>([]);
     const [loading, setLoading] = useState(true);
     const [cartCount, setCartCount] = useState(0);
     const [addingId, setAddingId] = useState<string | null>(null);
     const [toast, setToast] = useState('');
-    const [search, setSearch] = useState('');
+
+    // Search & Filter State
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedAuthor, setSelectedAuthor] = useState('');
+    const [sortBy, setSortBy] = useState('newest');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalResults, setTotalResults] = useState(0);
+    const [showFilters, setShowFilters] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) { router.push('/'); return; }
+        fetchAuthors();
         fetchBooks();
         fetchCartCount();
     }, []);
 
+    useEffect(() => {
+        setCurrentPage(1);
+        fetchBooks();
+    }, [searchQuery, selectedAuthor, sortBy]);
+
+    useEffect(() => {
+        if (currentPage > 1) fetchBooks();
+    }, [currentPage]);
+
+    async function fetchAuthors() {
+        try {
+            const res = await fetch(`${API}/authors`, { cache: 'no-store' });
+            const data = await res.json();
+            setAuthors(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
     async function fetchBooks() {
         try {
-            const res = await fetch(`${API}/books`, { cache: 'no-store' });
+            setLoading(true);
+            const params = new URLSearchParams();
+
+            if (searchQuery) params.append('q', searchQuery);
+            if (selectedAuthor) params.append('authorId', selectedAuthor);
+            params.append('sort', sortBy);
+            params.append('page', currentPage.toString());
+            params.append('limit', '12');
+
+            // Use advanced search if any filter is active
+            const hasFilters = searchQuery || selectedAuthor;
+
+            const endpoint = hasFilters
+                ? `${API}/books/search/advanced?${params}`
+                : `${API}/books`;
+
+            const res = await fetch(endpoint, { cache: 'no-store' });
             const data = await res.json();
-            setBooks(Array.isArray(data) ? data : []);
+
+            if (hasFilters && data.data) {
+                setBooks(Array.isArray(data.data) ? data.data : []);
+                setTotalResults(data.total);
+            } else if (Array.isArray(data)) {
+                setBooks(data);
+                setTotalResults(data.length);
+            }
+        } catch (err) {
+            console.error(err);
+            setBooks([]);
         } finally {
             setLoading(false);
         }
@@ -79,11 +138,7 @@ export default function DashboardPage() {
         }
     }
 
-    const filtered = books.filter(
-        (b) =>
-            b.title.toLowerCase().includes(search.toLowerCase()) ||
-            (b.author?.name || '').toLowerCase().includes(search.toLowerCase()),
-    );
+    const totalPages = Math.ceil(totalResults / 12);
 
     return (
         <div style={{ minHeight: '100vh' }}>
@@ -91,52 +146,214 @@ export default function DashboardPage() {
 
             <main className="page">
                 {/* Header */}
-                <div style={{ marginBottom: '2rem' }}>
+                <div style={{ marginBottom: '1.5rem' }}>
                     <h1 style={{ fontSize: '1.75rem', fontWeight: '800', marginBottom: '0.25rem' }}>
                         📖 Kitap Kataloğu
                     </h1>
                     <p style={{ color: '#9d6db0', fontSize: '0.9rem' }}>
-                        {books.length} kitap mevcut
+                        {totalResults} kitap bulundu
                     </p>
                 </div>
 
-                {/* Search */}
-                <div style={{ marginBottom: '2rem', maxWidth: '400px' }}>
+                {/* Search Bar */}
+                <div style={{ marginBottom: '1.5rem', maxWidth: '500px' }}>
                     <input
                         className="input"
-                        placeholder="🔍  Kitap veya yazar ara..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="🔍 Kitap veya yazar ara..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
 
-                {/* Books grid */}
+                {/* Filter Toggle Button */}
+                <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    style={{
+                        marginBottom: '1rem',
+                        padding: '10px 15px',
+                        backgroundColor: showFilters ? '#e91e63' : '#6b4c7a',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.9rem',
+                    }}
+                >
+                    {showFilters ? '✖ Filtreleri Kapat' : '⚙ Filtreleri Aç'}
+                </button>
+
+                {/* Filters Panel */}
+                {showFilters && (
+                    <div
+                        style={{
+                            marginBottom: '1.5rem',
+                            padding: '1.5rem',
+                            backgroundColor: '#1a0f1e',
+                            border: '1px solid #3d1f4a',
+                            borderRadius: '8px',
+                        }}
+                    >
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                            {/* Author Filter */}
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Yazar</label>
+                                <select
+                                    className="input"
+                                    value={selectedAuthor}
+                                    onChange={(e) => setSelectedAuthor(e.target.value)}
+                                    style={{ width: '100%' }}
+                                >
+                                    <option value="">Tümü</option>
+                                    {authors.map((author) => (
+                                        <option key={author.id} value={author.id}>
+                                            {author.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Sort */}
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Sıralama</label>
+                                <select
+                                    className="input"
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value)}
+                                    style={{ width: '100%' }}
+                                >
+                                    <option value="newest">En Yeni</option>
+                                    <option value="price_asc">Fiyat (Düşük → Yüksek)</option>
+                                    <option value="price_desc">Fiyat (Yüksek → Düşük)</option>
+                                    <option value="rating">En İyi Puanlı</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Reset Filters Button */}
+                        <button
+                            onClick={() => {
+                                setSearchQuery('');
+                                setSelectedAuthor('');
+                                setSortBy('newest');
+                                setCurrentPage(1);
+                            }}
+                            style={{
+                                marginTop: '1rem',
+                                padding: '8px 16px',
+                                backgroundColor: '#6b4c7a',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '0.85rem',
+                            }}
+                        >
+                            🔄 Filtreleri Sıfırla
+                        </button>
+                    </div>
+                )}
+
+                {/* Books Grid */}
                 {loading ? (
                     <div style={{ textAlign: 'center', padding: '4rem', color: '#9d6db0' }}>
                         Yükleniyor...
                     </div>
-                ) : (
-                    <div
-                        style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                            gap: '1.25rem',
-                        }}
-                    >
-                        {filtered.map((book) => (
-                            <BookCard
-                                key={book.id}
-                                book={book}
-                                onAdd={() => addToCart(book.id)}
-                                adding={addingId === book.id}
-                            />
-                        ))}
-                        {filtered.length === 0 && (
-                            <p style={{ color: '#9d6db0', gridColumn: '1/-1', textAlign: 'center', padding: '3rem' }}>
-                                Sonuç bulunamadı.
-                            </p>
-                        )}
+                ) : books.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '4rem', color: '#9d6db0' }}>
+                        Sonuç bulunamadı.
                     </div>
+                ) : (
+                    <>
+                        <div
+                            style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                                gap: '1.25rem',
+                                marginBottom: '2rem',
+                            }}
+                        >
+                            {books.map((book) => (
+                                <BookCard
+                                    key={book.id}
+                                    book={book}
+                                    onAdd={() => addToCart(book.id)}
+                                    adding={addingId === book.id}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    gap: '0.5rem',
+                                    marginTop: '2rem',
+                                    flexWrap: 'wrap',
+                                }}
+                            >
+                                <button
+                                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                    disabled={currentPage === 1}
+                                    style={{
+                                        padding: '8px 12px',
+                                        backgroundColor: currentPage === 1 ? '#555' : '#e91e63',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                                    }}
+                                >
+                                    ← Önceki
+                                </button>
+
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                    let pageNum;
+                                    if (totalPages <= 5) {
+                                        pageNum = i + 1;
+                                    } else if (currentPage <= 3) {
+                                        pageNum = i + 1;
+                                    } else if (currentPage >= totalPages - 2) {
+                                        pageNum = totalPages - 4 + i;
+                                    } else {
+                                        pageNum = currentPage - 2 + i;
+                                    }
+                                    return (
+                                        <button
+                                            key={pageNum}
+                                            onClick={() => setCurrentPage(pageNum)}
+                                            style={{
+                                                padding: '8px 12px',
+                                                backgroundColor: currentPage === pageNum ? '#db2777' : '#6b4c7a',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    );
+                                })}
+
+                                <button
+                                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                    disabled={currentPage === totalPages}
+                                    style={{
+                                        padding: '8px 12px',
+                                        backgroundColor: currentPage === totalPages ? '#555' : '#e91e63',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                                    }}
+                                >
+                                    Sonraki →
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
             </main>
 
@@ -155,16 +372,11 @@ export default function DashboardPage() {
                         fontWeight: '600',
                         boxShadow: '0 8px 32px #db277730',
                         zIndex: 200,
-                        animation: 'fadeIn 0.2s ease',
                     }}
                 >
                     {toast}
                 </div>
             )}
-
-            <style>{`
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
         </div>
     );
 }
@@ -217,7 +429,7 @@ function BookCard({ book, onAdd, adding }: { book: Book; onAdd: () => void; addi
             className="card"
             style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}
         >
-            {/* Heart button (top-right) */}
+            {/* Heart button */}
             <button
                 onClick={toggleWishlist}
                 disabled={loadingWishlist}
@@ -260,7 +472,7 @@ function BookCard({ book, onAdd, adding }: { book: Book; onAdd: () => void; addi
 
             {/* Info */}
             <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: '700', lineHeight: '1.3' }}>{book.title}</h3>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: '700', lineHeight: '1.3' }}>{book.title || book.name}</h3>
                 <p style={{ fontSize: '0.8rem', color: '#c084fc' }}>{book.author?.name || '—'}</p>
                 <p style={{ fontSize: '1.1rem', fontWeight: '800', color: '#f472b6', marginTop: 'auto', paddingTop: '0.5rem' }}>
                     ₺{Number(book.price).toFixed(2)}
