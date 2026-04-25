@@ -170,13 +170,77 @@ export default function DashboardPage() {
 }
 
 function BookCard({ book, onAdd, adding }: { book: Book; onAdd: () => void; adding: boolean }) {
+    const [isInWishlist, setIsInWishlist] = useState(false);
+    const [loadingWishlist, setLoadingWishlist] = useState(false);
     const outOfStock = book.stock === 0;
+
+    useEffect(() => {
+        checkWishlist();
+    }, [book.id]);
+
+    async function checkWishlist() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const res = await fetch(`${API}/wishlist/check/${book.id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await res.json();
+            setIsInWishlist(data.isInWishlist);
+        } catch {
+            /* ignore */
+        }
+    }
+
+    async function toggleWishlist() {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        setLoadingWishlist(true);
+        try {
+            const method = isInWishlist ? 'DELETE' : 'POST';
+            await fetch(`${API}/wishlist/${book.id}`, {
+                method,
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setIsInWishlist(!isInWishlist);
+        } catch {
+            /* ignore */
+        } finally {
+            setLoadingWishlist(false);
+        }
+    }
 
     return (
         <div
             className="card"
-            style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+            style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}
         >
+            {/* Heart button (top-right) */}
+            <button
+                onClick={toggleWishlist}
+                disabled={loadingWishlist}
+                style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    background: 'rgba(25, 15, 25, 0.8)',
+                    border: '1px solid #3d1f4a',
+                    borderRadius: '50%',
+                    width: '36px',
+                    height: '36px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: loadingWishlist ? 'wait' : 'pointer',
+                    fontSize: '1.2rem',
+                    zIndex: 10,
+                }}
+            >
+                {isInWishlist ? '❤️' : '🤍'}
+            </button>
+
             {/* Cover */}
             <div
                 style={{

@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Order } from './order.entity';
 import { Cart } from './cart.entity';
+import { Wishlist } from './wishlist.entity';
 
 @Entity('users')
 export class User {
@@ -43,4 +44,7 @@ export class User {
 
   @OneToMany(() => Cart, (cart) => cart.user, { cascade: true })
   cart: Cart[];
+
+  @OneToMany(() => Wishlist, (wishlist) => wishlist.user, { cascade: true })
+  wishlists: Wishlist[];
 }
