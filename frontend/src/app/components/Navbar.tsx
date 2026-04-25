@@ -11,6 +11,7 @@ export default function Navbar({ cartCount = 0 }: NavbarProps) {
     const router = useRouter();
     const [userName, setUserName] = useState('');
     const [userRole, setUserRole] = useState('');
+    const [menuOpen, setMenuOpen] = useState(false);
 
     useEffect(() => {
         setUserName(localStorage.getItem('userName') || '');
@@ -97,14 +98,144 @@ export default function Navbar({ cartCount = 0 }: NavbarProps) {
                     </button>
                 )}
 
-                {/* Username */}
-                <span style={{ fontSize: '0.85rem', color: '#c084fc' }}>
-                    👤 {userName}
-                </span>
+                {/* User Menu */}
+                <div style={{ position: 'relative' }}>
+                    <button
+                        className="btn-ghost"
+                        onClick={() => setMenuOpen(!menuOpen)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            padding: '0.4rem 0.9rem',
+                            fontSize: '0.85rem',
+                            color: '#c084fc',
+                        }}
+                    >
+                        👤 {userName}
+                        <span style={{ fontSize: '0.7rem' }}>▼</span>
+                    </button>
 
-                <button className="btn-ghost" onClick={handleLogout} style={{ padding: '0.4rem 0.9rem', fontSize: '0.8rem' }}>
-                    Çıkış
-                </button>
+                    {/* Dropdown Menu */}
+                    {menuOpen && (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: '100%',
+                                right: 0,
+                                marginTop: '0.5rem',
+                                background: 'rgba(25, 15, 25, 0.95)',
+                                border: '1px solid #3d1f4a',
+                                borderRadius: '8px',
+                                minWidth: '200px',
+                                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                            }}
+                        >
+                            <button
+                                onClick={() => {
+                                    router.push('/profile');
+                                    setMenuOpen(false);
+                                }}
+                                style={{
+                                    display: 'block',
+                                    width: '100%',
+                                    padding: '10px 15px',
+                                    textAlign: 'left',
+                                    background: 'none',
+                                    border: 'none',
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                    fontSize: '0.9rem',
+                                    borderBottom: '1px solid #3d1f4a',
+                                }}
+                                onMouseEnter={(e) =>
+                                    (e.currentTarget.style.background = 'rgba(244, 114, 182, 0.1)')
+                                }
+                                onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                            >
+                                👤 Profil
+                            </button>
+
+                            {userRole === 'customer' && (
+                                <>
+                                    <button
+                                        onClick={() => {
+                                            router.push('/orders');
+                                            setMenuOpen(false);
+                                        }}
+                                        style={{
+                                            display: 'block',
+                                            width: '100%',
+                                            padding: '10px 15px',
+                                            textAlign: 'left',
+                                            background: 'none',
+                                            border: 'none',
+                                            color: '#fff',
+                                            cursor: 'pointer',
+                                            fontSize: '0.9rem',
+                                            borderBottom: '1px solid #3d1f4a',
+                                        }}
+                                        onMouseEnter={(e) =>
+                                            (e.currentTarget.style.background = 'rgba(244, 114, 182, 0.1)')
+                                        }
+                                        onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                                    >
+                                        📦 Siparişlerim
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            router.push('/wishlist');
+                                            setMenuOpen(false);
+                                        }}
+                                        style={{
+                                            display: 'block',
+                                            width: '100%',
+                                            padding: '10px 15px',
+                                            textAlign: 'left',
+                                            background: 'none',
+                                            border: 'none',
+                                            color: '#fff',
+                                            cursor: 'pointer',
+                                            fontSize: '0.9rem',
+                                            borderBottom: '1px solid #3d1f4a',
+                                        }}
+                                        onMouseEnter={(e) =>
+                                            (e.currentTarget.style.background = 'rgba(244, 114, 182, 0.1)')
+                                        }
+                                        onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                                    >
+                                        ❤️ İstek Listem
+                                    </button>
+                                </>
+                            )}
+
+                            <button
+                                onClick={() => {
+                                    handleLogout();
+                                    setMenuOpen(false);
+                                }}
+                                style={{
+                                    display: 'block',
+                                    width: '100%',
+                                    padding: '10px 15px',
+                                    textAlign: 'left',
+                                    background: 'none',
+                                    border: 'none',
+                                    color: '#ff6b9d',
+                                    cursor: 'pointer',
+                                    fontSize: '0.9rem',
+                                }}
+                                onMouseEnter={(e) =>
+                                    (e.currentTarget.style.background = 'rgba(244, 114, 182, 0.1)')
+                                }
+                                onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                            >
+                                🚪 Çıkış Yap
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </nav>
     );
