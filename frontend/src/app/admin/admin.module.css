@@ -244,3 +244,23 @@
         width: 0%;
     }
 }
+/* -- LINTER HATALARI İÇİN EKLENEN SINIFLAR -- */
+.addButton { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
+.tableHeaderCellCenter { text-align: center; padding: 0.5rem 0.75rem; color: #9d6db0; }
+.cellTitle { font-weight: 600; }
+.cellAuthor { color: #c084fc; }
+.cellPrice { color: #f472b6; font-weight: 700; }
+.bookImage { height: 40px; width: 30px; object-fit: cover; border-radius: 4px; display: inline-block; }
+.bookPlaceholder { height: 40px; width: 30px; background: #3d1f4a; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem; margin: 0 auto; }
+.actionGroup { display: flex; gap: 0.5rem; justify-content: center; }
+.actionBtn { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
+.modalTitle { font-weight: 800; margin-bottom: 1.5rem; color: #f472b6; }
+.formGroup { display: flex; flex-direction: column; gap: 0.9rem; }
+.inputLabel { font-size: 0.8rem; color: #c084fc; display: block; margin-bottom: 0.3rem; }
+.modalActionGroup { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+.flex1 { flex: 1; }
+.resetModalBody { max-width: 420px; width: 100%; padding: 2rem; text-align: center; }
+.warningIcon { font-size: 2.5rem; margin-bottom: 1rem; }
+.resetModalDesc { color: #c084fc; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.6; }
+.resetConfirmBtn { flex: 1; padding: 0.8rem; border-radius: 0.75rem; background: linear-gradient(135deg, #7e22ce, #9d174d); color: #fff; font-weight: 700; border: none; cursor: pointer; }
+.toastProgressBg { background: #10b981; }

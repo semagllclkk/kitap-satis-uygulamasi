@@ -3,6 +3,7 @@
     top: 0;
     z-index: 100;
     background: rgba(15, 10, 15, 0.9);
+    -webkit-backdrop-filter: blur(16px); /* Safari desteği için eklendi */
     backdrop-filter: blur(16px);
     border-bottom: 1px solid #3d1f4a;
     padding: 0 1.5rem;

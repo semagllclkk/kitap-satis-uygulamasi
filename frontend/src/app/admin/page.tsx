@@ -4,18 +4,27 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Navbar from '../components/Navbar';
-import AdminStats from './AdminStats';
 import styles from './admin.module.css';
 
 const API = 'http://localhost:3000';
+
+interface OrderDetail {
+    book?: { title?: string };
+    price: number;
+    quantity: number;
+}
 
 interface Order {
     id: string;
     totalPrice: number;
     createdAt: string;
+    orderDetails?: OrderDetail[];
 }
 
-interface Author { id: string; name: string; }
+interface Author { 
+    id: string; 
+    name: string; 
+}
 
 interface Book {
     id: string;
@@ -149,12 +158,20 @@ export default function AdminPage() {
         }
     }
 
+    // İstatistiki verilerin hesaplanması
     const chartData = buildChartData(orders);
     const totalRevenue = orders.reduce((s, o) => s + Number(o.totalPrice), 0);
     
-    // Reset yearly stats after April (Nisan)
-    const filteredYearlyStats = yearlyStats.map((stat, idx) => {
-        // April is month 4 (0-indexed would be 3), so reset from May (5) onwards
+    const yearlyStats = Array.from({ length: 12 }, (_, i) => {
+        const monthOrders = orders.filter(o => new Date(o.createdAt).getMonth() === i && new Date(o.createdAt).getFullYear() === new Date().getFullYear());
+        return {
+            month: i + 1,
+            gelir: monthOrders.reduce((sum, o) => sum + Number(o.totalPrice), 0),
+            siparis: monthOrders.length
+        };
+    });
+
+    const filteredYearlyStats = yearlyStats.map((stat: { month: number, gelir: number, siparis: number }, idx: number) => {
         const monthNum = idx + 1;
         if (monthNum > 4) {
             return { ...stat, gelir: 0, siparis: 0 };
@@ -165,44 +182,40 @@ export default function AdminPage() {
     const totalYearRevenue = filteredYearlyStats.reduce((s, m) => s + m.gelir, 0);
     const totalYearOrders = filteredYearlyStats.reduce((s, m) => s + m.siparis, 0);
     
-    // Calculate April daily average
     const aprilOrders = orders.filter(o => new Date(o.createdAt).getMonth() === 3 && new Date(o.createdAt).getFullYear() === new Date().getFullYear());
     const aprilDays = new Set(aprilOrders.map(o => new Date(o.createdAt).toISOString().slice(0, 10)));
     const aprilDailyAverage = aprilDays.size > 0 ? (aprilOrders.reduce((s, o) => s + Number(o.totalPrice), 0) / aprilDays.size) : 0;
     
-    // Calculate top product
     const productRevenue: { [key: string]: number } = {};
     orders.forEach(o => {
-        o.orderDetails?.forEach(od => {
+        o.orderDetails?.forEach((od: OrderDetail) => {
             const title = od.book?.title || 'Silinmiş Kitap';
             productRevenue[title] = (productRevenue[title] || 0) + (od.price * od.quantity);
         });
     });
     const topProduct = Object.entries(productRevenue).sort((a, b) => b[1] - a[1])[0];
     const topProductName = topProduct?.[0] || '—';
-    const topProductRevenue = topProduct?.[1] || 0;
 
     return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <div className={styles.pageContainer}>
             <Navbar />
 
-            <main className="page" style={{ flex: 1, paddingBottom: '4rem' }}>
-                <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                    <h1 style={{ fontSize: '1.75rem', fontWeight: '800' }}>
+            <main className={styles.mainContent}>
+                <div className={styles.headerContainer}>
+                    <h1 className={styles.pageTitle}>
                         📦 Envanter Paneli
                     </h1>
-                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <div className={styles.buttonGroup}>
                         <button className="btn-ghost" onClick={() => router.push('/admin/authors')}>Yazar Yönetimi</button>
                         <button className="btn-ghost" onClick={() => router.push('/admin/users')}>Kullanıcı Yönetimi</button>
                     </div>
                 </div>
 
                 {loading ? (
-                    <div style={{ textAlign: 'center', padding: '4rem', color: '#9d6db0' }}>Yükleniyor...</div>
+                    <div className={styles.loadingContainer}>Yükleniyor...</div>
                 ) : (
                     <>
-                        {/* Stats Row */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                        <div className={styles.statsGrid}>
                             {[
                                 { label: 'Toplam Kitap', value: books.length, icon: '📚', color: '#c084fc' },
                                 { label: 'Toplam Sipariş', value: orders.length, icon: '🛒', color: '#f472b6' },
@@ -210,53 +223,51 @@ export default function AdminPage() {
                                 { label: 'Yıllık Gelir', value: `₺${totalYearRevenue.toFixed(0)}`, icon: '💰', color: '#34d399' },
                                 { label: 'Toplam Gelir', value: `₺${totalRevenue.toFixed(0)}`, icon: '📈', color: '#f59e0b' },
                                 { label: 'Nisan Ort. Günlük', value: `₺${aprilDailyAverage.toFixed(0)}`, icon: '📊', color: '#a78bfa' },
-                                { label: 'En Satılan Kitap', value: topProductName.length > 15 ? topProductName.substring(0, 12) + '...' : topProductName, icon: '⭐', color: '#f472b6' },
+                                { label: 'En Satılan', value: topProductName.length > 15 ? topProductName.substring(0, 12) + '...' : topProductName, icon: '⭐', color: '#f472b6' },
                                 { label: 'Yazarlar', value: authors.length, icon: '✍️', color: '#10b981' },
                             ].map((s) => (
-                                <div key={s.label} className="card" style={{ padding: '1.25rem' }}>
-                                    <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{s.icon}</div>
-                                    <div style={{ fontSize: '1.4rem', fontWeight: '800', color: s.color }}>{s.value}</div>
-                                    <div style={{ fontSize: '0.75rem', color: '#9d6db0', marginTop: '0.2rem' }}>{s.label}</div>
+                                <div key={s.label} className={`card ${styles.statCard}`}>
+                                    <div className={styles.statIcon}>{s.icon}</div>
+                                    {/* Sadece color prop'u dinamik olduğu için bu style elementi linting'de genelde istisna tutulur */}
+                                    <div className={styles.statValue} style={{ color: s.color }}>{s.value}</div>
+                                    <div className={styles.statLabel}>{s.label}</div>
                                 </div>
                             ))}
                         </div>
 
-                        {/* Book List Table with CRUD */}
-                        <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                                <h2 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#c084fc' }}>
-                                    Kitap Listesi
-                                </h2>
-                                <button className="btn-primary" onClick={openAdd} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>+ Yeni Kitap</button>
+                        <div className={`card ${styles.bookTableContainer}`}>
+                            <div className={styles.tableHeader}>
+                                <h2 className={styles.tableTitle}>Kitap Listesi</h2>
+                                <button className={`btn-primary ${styles.addButton}`} onClick={openAdd}>+ Yeni Kitap</button>
                             </div>
-                            <div style={{ overflowX: 'auto', maxHeight: '340px' }}>
-                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                                    <thead style={{ position: 'sticky', top: 0, background: 'var(--color-surface)' }}>
-                                        <tr style={{ borderBottom: '1px solid #3d1f4a' }}>
-                                            <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', color: '#9d6db0' }}>Kitap Adı</th>
-                                            <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', color: '#9d6db0' }}>Yazar</th>
-                                            <th style={{ textAlign: 'left', padding: '0.5rem 0.75rem', color: '#9d6db0' }}>Fiyat</th>
-                                            <th style={{ textAlign: 'center', padding: '0.5rem 0.75rem', color: '#9d6db0' }}>Kapak Görseli</th>
-                                            <th style={{ textAlign: 'center', padding: '0.5rem 0.75rem', color: '#9d6db0' }}>İşlemler</th>
+                            <div className={styles.tableWrapper}>
+                                <table className={styles.table}>
+                                    <thead className={styles.tableHead}>
+                                        <tr className={styles.tableHeadRow}>
+                                            <th className={styles.tableHeaderCell}>Kitap Adı</th>
+                                            <th className={styles.tableHeaderCell}>Yazar</th>
+                                            <th className={styles.tableHeaderCell}>Fiyat</th>
+                                            <th className={styles.tableHeaderCellCenter}>Kapak Görseli</th>
+                                            <th className={styles.tableHeaderCellCenter}>İşlemler</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {books.map((b) => (
-                                            <tr key={b.id} style={{ borderBottom: '1px solid #3d1f4a22' }}>
-                                                <td style={{ padding: '0.75rem', fontWeight: '600' }}>{b.title}</td>
-                                                <td style={{ padding: '0.75rem', color: '#c084fc' }}>{b.author?.name || '—'}</td>
-                                                <td style={{ padding: '0.75rem', color: '#f472b6', fontWeight: '700' }}>₺{Number(b.price).toFixed(2)}</td>
-                                                <td style={{ padding: '0.5rem', textAlign: 'center' }}>
+                                            <tr key={b.id} className={styles.tableBodyRow}>
+                                                <td className={`${styles.tableCell} ${styles.cellTitle}`}>{b.title}</td>
+                                                <td className={`${styles.tableCell} ${styles.cellAuthor}`}>{b.author?.name || '—'}</td>
+                                                <td className={`${styles.tableCell} ${styles.cellPrice}`}>₺{Number(b.price).toFixed(2)}</td>
+                                                <td className={styles.tableCellCenter}>
                                                     {b.imageUrl ? (
-                                                        <img src={b.imageUrl} alt={b.title} style={{ height: '40px', width: '30px', objectFit: 'cover', borderRadius: '4px', display: 'inline-block' }} />
+                                                        <img src={b.imageUrl} alt={b.title} className={styles.bookImage} />
                                                     ) : (
-                                                        <div style={{ height: '40px', width: '30px', background: '#3d1f4a', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', margin: '0 auto' }}>📗</div>
+                                                        <div className={styles.bookPlaceholder}>📗</div>
                                                     )}
                                                 </td>
-                                                <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                                                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                                                        <button className="btn-ghost" onClick={() => openEdit(b)} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}>Düzenle</button>
-                                                        <button className="btn-danger" onClick={() => removeBook(b.id)} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}>Sil</button>
+                                                <td className={styles.tableCellCenter}>
+                                                    <div className={styles.actionGroup}>
+                                                        <button className={`btn-ghost ${styles.actionBtn}`} onClick={() => openEdit(b)}>Düzenle</button>
+                                                        <button className={`btn-danger ${styles.actionBtn}`} onClick={() => removeBook(b.id)}>Sil</button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -266,11 +277,8 @@ export default function AdminPage() {
                             </div>
                         </div>
 
-                        {/* Line Chart */}
-                        <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
-                            <h2 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.25rem', color: '#c084fc' }}>
-                                Aylık Gelir Grafiği
-                            </h2>
+                        <div className={`card ${styles.chartCard}`}>
+                            <h2 className={styles.chartTitle}>Aylık Gelir Grafiği</h2>
                             <ResponsiveContainer width="100%" height={240}>
                                 <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#3d1f4a" vertical={false} />
@@ -288,79 +296,83 @@ export default function AdminPage() {
                 )}
             </main>
 
-            {/* Footer with Reset Button */}
-            <footer style={{ background: 'var(--color-surface-2)', borderTop: '1px solid var(--color-border)', padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#9d6db0', fontSize: '0.9rem', fontWeight: '600' }}>Kitabevi Dashboard</span>
+            <footer className={styles.footerContainer}>
+                <span className={styles.footerText}>Kitabevi Dashboard</span>
                 <button
                     onClick={() => setShowResetModal(true)}
                     disabled={resetting}
-                    style={{
-                        padding: '0.6rem 1.2rem', borderRadius: '0.5rem',
-                        background: 'transparent', color: '#f87171',
-                        border: '1px solid #f8717180', fontWeight: '600',
-                        cursor: 'pointer', fontSize: '0.85rem',
-                        opacity: resetting ? 0.6 : 1, transition: 'all 0.2s'
-                    }}
-                    onMouseOver={(e) => { e.currentTarget.style.background = '#f8717115'; e.currentTarget.style.borderColor = '#f87171'; }}
-                    onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = '#f8717180'; }}
+                    className={styles.resetButton}
                 >
                     {resetting ? 'Sıfırlanıyor...' : 'Admin Reset'}
                 </button>
             </footer>
 
-            {/* CRUD Modal */}
             {modal && (
-                <div style={{ position: 'fixed', inset: 0, background: '#00000090', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '1rem' }}>
-                    <div className="glass" style={{ width: '100%', maxWidth: '520px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
-                        <h2 style={{ fontWeight: '800', marginBottom: '1.5rem', color: '#f472b6' }}>{modal === 'add' ? '+ Yeni Kitap' : '✏️ Kitabı Düzenle'}</h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+                <div className={styles.modalBackdrop}>
+                    <div className={`glass ${styles.modal}`}>
+                        <h2 className={styles.modalTitle}>{modal === 'add' ? '+ Yeni Kitap' : '✏️ Kitabı Düzenle'}</h2>
+                        <div className={styles.formGroup}>
                             {[['title', 'Başlık *'], ['price', 'Fiyat *'], ['stock', 'Stok *'], ['isbn', 'ISBN'], ['imageUrl', 'Kapak URL'], ['publicationYear', 'Yayın Yılı'], ['publisher', 'Yayınevi']].map(([k, label]) => (
                                 <div key={k}>
-                                    <label style={{ fontSize: '0.8rem', color: '#c084fc', display: 'block', marginBottom: '0.3rem' }}>{label}</label>
-                                    <input className="input" value={(form as Record<string, string>)[k]} onChange={e => setForm(f => ({ ...f, [k]: e.target.value }))} />
+                                    <label htmlFor={`input-${k}`} className={styles.inputLabel}>{label}</label>
+                                    <input 
+                                        id={`input-${k}`}
+                                        title={label}
+                                        placeholder={label}
+                                        className="input" 
+                                        value={(form as Record<string, string>)[k]} 
+                                        onChange={e => setForm(f => ({ ...f, [k]: e.target.value }))} 
+                                    />
                                 </div>
                             ))}
                             <div>
-                                <label style={{ fontSize: '0.8rem', color: '#c084fc', display: 'block', marginBottom: '0.3rem' }}>Yazar *</label>
-                                <select className="input" value={form.authorId} onChange={e => setForm(f => ({ ...f, authorId: e.target.value }))}>
+                                <label htmlFor="select-author" className={styles.inputLabel}>Yazar *</label>
+                                <select 
+                                    id="select-author"
+                                    title="Yazar Seçimi"
+                                    aria-label="Yazar Seçimi"
+                                    className="input" 
+                                    value={form.authorId} 
+                                    onChange={e => setForm(f => ({ ...f, authorId: e.target.value }))}
+                                >
                                     <option value="">Seçin…</option>
                                     {authors.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                                 </select>
                             </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
-                            <button className="btn-primary" onClick={saveBook} disabled={saving} style={{ flex: 1 }}>{saving ? '…' : 'Kaydet'}</button>
-                            <button className="btn-ghost" onClick={() => setModal(null)} style={{ flex: 1 }}>İptal</button>
+                        <div className={styles.modalActionGroup}>
+                            <button className={`btn-primary ${styles.flex1}`} onClick={saveBook} disabled={saving}>{saving ? '…' : 'Kaydet'}</button>
+                            <button className={`btn-ghost ${styles.flex1}`} onClick={() => setModal(null)}>İptal</button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Reset Confirm Modal */}
             {showResetModal && (
-                <div style={{ position: 'fixed', inset: 0, background: '#00000090', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '1rem' }}>
-                    <div className="glass" style={{ maxWidth: '420px', width: '100%', padding: '2rem', textAlign: 'center' }}>
-                        <p style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>⚠️</p>
-                        <h2 style={{ fontWeight: '800', marginBottom: '0.75rem', color: '#f472b6' }}>Sistemi Sıfırla</h2>
-                        <p style={{ color: '#c084fc', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+                <div className={styles.modalBackdrop}>
+                    <div className={`glass ${styles.resetModalBody}`}>
+                        <p className={styles.warningIcon}>⚠️</p>
+                        <h2 className={styles.modalTitle}>Sistemi Sıfırla</h2>
+                        <p className={styles.resetModalDesc}>
                             Tüm test verileri silinip, sistem temiz demo verileriyle baştan kurulacaktır. Onaylıyor musunuz?
                         </p>
-                        <div style={{ display: 'flex', gap: '0.75rem' }}>
-                            <button
-                                onClick={handleReset}
-                                style={{ flex: 1, padding: '0.8rem', borderRadius: '0.75rem', background: 'linear-gradient(135deg, #7e22ce, #9d174d)', color: '#fff', fontWeight: '700', border: 'none', cursor: 'pointer' }}
-                            >
+                        <div className={styles.modalActionGroup}>
+                            <button onClick={handleReset} className={styles.resetConfirmBtn}>
                                 Evet, Sıfırla
                             </button>
-                            <button className="btn-ghost" onClick={() => setShowResetModal(false)} style={{ flex: 1 }}>İptal</button>
+                            <button className={`btn-ghost ${styles.flex1}`} onClick={() => setShowResetModal(false)}>İptal</button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Toast */}
             {toast && (
-                <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', background: '#1a0f1e', border: '1px solid #db277750', color: '#f472b6', padding: '0.75rem 1.25rem', borderRadius: '0.75rem', fontWeight: '600', zIndex: 400 }}>{toast}</div>
+                <div className={`${styles.toastContainer} ${styles.toastSuccess}`}>
+                    <div className={styles.toastContent}>
+                        {toast}
+                    </div>
+                    <div className={`${styles.toastProgress} ${styles.toastProgressBg}`}></div>
+                </div>
             )}
         </div>
     );
