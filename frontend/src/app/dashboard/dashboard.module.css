@@ -1,0 +1,141 @@
+.container {
+    min-height: 100vh;
+}
+
+.headerSection {
+    margin-bottom: 2rem;
+}
+
+.pageTitle {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+}
+
+.subtitle {
+    color: #9d6db0;
+    font-size: 0.9rem;
+}
+
+.searchSection {
+    margin-bottom: 2rem;
+    max-width: 400px;
+}
+
+.loadingContainer {
+    text-align: center;
+    padding: 4rem;
+    color: #9d6db0;
+}
+
+.booksGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.25rem;
+}
+
+.emptyState {
+    color: #9d6db0;
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.bookCover {
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    flex-shrink: 0;
+}
+
+.bookInfo {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1;
+}
+
+.bookTitle {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.bookAuthor {
+    font-size: 0.8rem;
+    color: #c084fc;
+}
+
+.bookPrice {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #f472b6;
+    margin-top: auto;
+    padding-top: 0.5rem;
+}
+
+.stockBadge {
+    align-self: flex-start;
+}
+
+.stockInfo {
+    font-size: 0.75rem;
+    color: #9d6db0;
+}
+
+.addButton {
+    width: 100%;
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+    border-radius: 0.5rem;
+    border: none;
+    background: #db2777;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.addButton:hover {
+    background: #f472b6;
+}
+
+.addButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.toastContainer {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: #1a0f1e;
+    border: 1px solid #db277750;
+    color: #f472b6;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    box-shadow: 0 8px 32px #db277730;
+    z-index: 200;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

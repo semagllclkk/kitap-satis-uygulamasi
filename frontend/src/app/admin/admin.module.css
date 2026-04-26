@@ -1,0 +1,246 @@
+.pageContainer {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.mainContent {
+    flex: 1;
+    padding-bottom: 4rem;
+}
+
+.headerContainer {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.pageTitle {
+    font-size: 1.75rem;
+    font-weight: 800;
+}
+
+.buttonGroup {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.loadingContainer {
+    text-align: center;
+    padding: 4rem;
+    color: #9d6db0;
+}
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.statCard {
+    padding: 1.25rem;
+}
+
+.statIcon {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.statValue {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin-bottom: 0.2rem;
+}
+
+.statLabel {
+    font-size: 0.75rem;
+    color: #9d6db0;
+}
+
+.bookTableContainer {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.tableHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.tableTitle {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #c084fc;
+}
+
+.tableWrapper {
+    overflow-x: auto;
+    max-height: 340px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.tableHead {
+    position: sticky;
+    top: 0;
+    background: var(--color-surface);
+}
+
+.tableHeadRow {
+    border-bottom: 1px solid #3d1f4a;
+}
+
+.tableHeaderCell {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    color: #9d6db0;
+}
+
+.tableBodyRow {
+    border-bottom: 1px solid #3d1f4a22;
+}
+
+.tableCell {
+    padding: 0.75rem;
+}
+
+.tableCellCenter {
+    text-align: center;
+    padding: 0.75rem;
+}
+
+.chartsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.chartCard {
+    padding: 1.5rem;
+}
+
+.chartTitle {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    color: #c084fc;
+}
+
+.ordersTableContainer {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.footerContainer {
+    background: var(--color-surface-2);
+    border-top: 1px solid var(--color-border);
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footerText {
+    color: #9d6db0;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.resetButton {
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: #f87171;
+    border: 1px solid #f8717180;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.resetButton:hover:not(:disabled) {
+    background: #f8717115;
+    border-color: #f87171;
+}
+
+.resetButton:disabled {
+    opacity: 0.6;
+}
+
+.modalBackdrop {
+    position: fixed;
+    inset: 0;
+    background: #00000090;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    padding: 1rem;
+}
+
+.modal {
+    max-width: 520px;
+    width: 100%;
+    padding: 2rem;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.toastContainer {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: #1a0f1e;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    z-index: 400;
+    overflow: hidden;
+}
+
+.toastSuccess {
+    border: 1px solid #10b981;
+    color: #10b981;
+    box-shadow: 0 8px 32px #10b98130;
+}
+
+.toastError {
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    box-shadow: 0 8px 32px #ef444430;
+}
+
+.toastContent {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toastProgress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    animation: shrink 3s linear forwards;
+}
+
+@keyframes shrink {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
+}

@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '../components/Navbar';
+import BookCard from './BookCard';
+import styles from './dashboard.module.css';
 
 const API = 'http://localhost:3000';
 
@@ -86,22 +88,16 @@ export default function DashboardPage() {
     );
 
     return (
-        <div style={{ minHeight: '100vh' }}>
+        <div className={styles.container}>
             <Navbar cartCount={cartCount} />
 
             <main className="page">
-                {/* Header */}
-                <div style={{ marginBottom: '2rem' }}>
-                    <h1 style={{ fontSize: '1.75rem', fontWeight: '800', marginBottom: '0.25rem' }}>
-                        📖 Kitap Kataloğu
-                    </h1>
-                    <p style={{ color: '#9d6db0', fontSize: '0.9rem' }}>
-                        {books.length} kitap mevcut
-                    </p>
+                <div className={styles.headerSection}>
+                    <h1 className={styles.pageTitle}>📖 Kitap Kataloğu</h1>
+                    <p className={styles.subtitle}>{books.length} kitap mevcut</p>
                 </div>
 
-                {/* Search */}
-                <div style={{ marginBottom: '2rem', maxWidth: '400px' }}>
+                <div className={styles.searchSection}>
                     <input
                         className="input"
                         placeholder="🔍  Kitap veya yazar ara..."
@@ -110,19 +106,10 @@ export default function DashboardPage() {
                     />
                 </div>
 
-                {/* Books grid */}
                 {loading ? (
-                    <div style={{ textAlign: 'center', padding: '4rem', color: '#9d6db0' }}>
-                        Yükleniyor...
-                    </div>
+                    <div className={styles.loadingContainer}>Yükleniyor...</div>
                 ) : (
-                    <div
-                        style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                            gap: '1.25rem',
-                        }}
-                    >
+                    <div className={styles.booksGrid}>
                         {filtered.map((book) => (
                             <BookCard
                                 key={book.id}
@@ -131,90 +118,12 @@ export default function DashboardPage() {
                                 adding={addingId === book.id}
                             />
                         ))}
-                        {filtered.length === 0 && (
-                            <p style={{ color: '#9d6db0', gridColumn: '1/-1', textAlign: 'center', padding: '3rem' }}>
-                                Sonuç bulunamadı.
-                            </p>
-                        )}
+                        {filtered.length === 0 && <p className={styles.emptyState}>Sonuç bulunamadı.</p>}
                     </div>
                 )}
             </main>
 
-            {/* Toast */}
-            {toast && (
-                <div
-                    style={{
-                        position: 'fixed',
-                        bottom: '2rem',
-                        right: '2rem',
-                        background: '#1a0f1e',
-                        border: '1px solid #db277750',
-                        color: '#f472b6',
-                        padding: '0.75rem 1.25rem',
-                        borderRadius: '0.75rem',
-                        fontWeight: '600',
-                        boxShadow: '0 8px 32px #db277730',
-                        zIndex: 200,
-                        animation: 'fadeIn 0.2s ease',
-                    }}
-                >
-                    {toast}
-                </div>
-            )}
-
-            <style>{`
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
-        </div>
-    );
-}
-
-function BookCard({ book, onAdd, adding }: { book: Book; onAdd: () => void; adding: boolean }) {
-    const outOfStock = book.stock === 0;
-
-    return (
-        <div
-            className="card"
-            style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
-        >
-            {/* Cover */}
-            <div
-                style={{
-                    height: '180px',
-                    background: book.imageUrl
-                        ? `url(${book.imageUrl}) center/cover no-repeat`
-                        : 'linear-gradient(135deg, #3d1f4a, #1a0f1e)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '3.5rem',
-                    flexShrink: 0,
-                }}
-            >
-                {!book.imageUrl && '📗'}
-            </div>
-
-            {/* Info */}
-            <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: '700', lineHeight: '1.3' }}>{book.title}</h3>
-                <p style={{ fontSize: '0.8rem', color: '#c084fc' }}>{book.author?.name || '—'}</p>
-                <p style={{ fontSize: '1.1rem', fontWeight: '800', color: '#f472b6', marginTop: 'auto', paddingTop: '0.5rem' }}>
-                    ₺{Number(book.price).toFixed(2)}
-                </p>
-                {outOfStock ? (
-                    <span className="badge badge-purple" style={{ alignSelf: 'flex-start' }}>Stok yok</span>
-                ) : (
-                    <span style={{ fontSize: '0.75rem', color: '#9d6db0' }}>{book.stock} adet kaldı</span>
-                )}
-                <button
-                    className="btn-primary"
-                    onClick={onAdd}
-                    disabled={adding || outOfStock}
-                    style={{ marginTop: '0.5rem', width: '100%' }}
-                >
-                    {adding ? '...' : outOfStock ? 'Tükendi' : '+ Sepete Ekle'}
-                </button>
-            </div>
+            {toast && <div className={styles.toastContainer}>{toast}</div>}
         </div>
     );
 }
