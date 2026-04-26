@@ -156,6 +156,37 @@ export default function AdminPage() {
     }
 
     const chartData = buildChartData(orders);
+    const totalRevenue = orders.reduce((s, o) => s + Number(o.totalPrice), 0);
+    
+    // Reset yearly stats after April (Nisan)
+    const filteredYearlyStats = yearlyStats.map((stat, idx) => {
+        // April is month 4 (0-indexed would be 3), so reset from May (5) onwards
+        const monthNum = idx + 1;
+        if (monthNum > 4) {
+            return { ...stat, gelir: 0, siparis: 0 };
+        }
+        return stat;
+    });
+    
+    const totalYearRevenue = filteredYearlyStats.reduce((s, m) => s + m.gelir, 0);
+    const totalYearOrders = filteredYearlyStats.reduce((s, m) => s + m.siparis, 0);
+    
+    // Calculate April daily average
+    const aprilOrders = orders.filter(o => new Date(o.createdAt).getMonth() === 3 && new Date(o.createdAt).getFullYear() === new Date().getFullYear());
+    const aprilDays = new Set(aprilOrders.map(o => new Date(o.createdAt).toISOString().slice(0, 10)));
+    const aprilDailyAverage = aprilDays.size > 0 ? (aprilOrders.reduce((s, o) => s + Number(o.totalPrice), 0) / aprilDays.size) : 0;
+    
+    // Calculate top product
+    const productRevenue: { [key: string]: number } = {};
+    orders.forEach(o => {
+        o.orderDetails?.forEach(od => {
+            const title = od.book?.title || 'Silinmiş Kitap';
+            productRevenue[title] = (productRevenue[title] || 0) + (od.price * od.quantity);
+        });
+    });
+    const topProduct = Object.entries(productRevenue).sort((a, b) => b[1] - a[1])[0];
+    const topProductName = topProduct?.[0] || '—';
+    const topProductRevenue = topProduct?.[1] || 0;
 
     return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -176,6 +207,26 @@ export default function AdminPage() {
                     <div style={{ textAlign: 'center', padding: '4rem', color: '#9d6db0' }}>Yükleniyor...</div>
                 ) : (
                     <>
+                        {/* Stats Row */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                            {[
+                                { label: 'Toplam Kitap', value: books.length, icon: '📚', color: '#c084fc' },
+                                { label: 'Toplam Sipariş', value: orders.length, icon: '🛒', color: '#f472b6' },
+                                { label: 'Yıllık Sipariş', value: totalYearOrders, icon: '📅', color: '#60a5fa' },
+                                { label: 'Yıllık Gelir', value: `₺${totalYearRevenue.toFixed(0)}`, icon: '💰', color: '#34d399' },
+                                { label: 'Toplam Gelir', value: `₺${totalRevenue.toFixed(0)}`, icon: '📈', color: '#f59e0b' },
+                                { label: 'Nisan Ort. Günlük', value: `₺${aprilDailyAverage.toFixed(0)}`, icon: '📊', color: '#a78bfa' },
+                                { label: 'En Satılan Kitap', value: topProductName.length > 15 ? topProductName.substring(0, 12) + '...' : topProductName, icon: '⭐', color: '#f472b6' },
+                                { label: 'Yazarlar', value: authors.length, icon: '✍️', color: '#10b981' },
+                            ].map((s) => (
+                                <div key={s.label} className="card" style={{ padding: '1.25rem' }}>
+                                    <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{s.icon}</div>
+                                    <div style={{ fontSize: '1.4rem', fontWeight: '800', color: s.color }}>{s.value}</div>
+                                    <div style={{ fontSize: '0.75rem', color: '#9d6db0', marginTop: '0.2rem' }}>{s.label}</div>
+                                </div>
+                            ))}
+                        </div>
+
                         {/* Book List Table with CRUD */}
                         <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
