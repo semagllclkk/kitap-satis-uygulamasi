@@ -1,0 +1,282 @@
+/* Layout */
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.mainContent {
+  flex: 1;
+  padding-bottom: 4rem;
+}
+
+.header {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.headerTitle {
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+
+.headerSubtitle {
+  color: #9d6db0;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Stats Grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.statCard {
+  padding: 1.25rem;
+}
+
+.statIcon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.statValue {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: #9d6db0;
+  margin-top: 0.2rem;
+}
+
+/* Tables */
+.tableCard {
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.tableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.tableTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #c084fc;
+}
+
+.tableScroll {
+  overflow-x: auto;
+  max-height: 340px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.tableHead {
+  position: sticky;
+  top: 0;
+  background: var(--color-surface);
+}
+
+.tableHeaderCell {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  color: #9d6db0;
+  border-bottom: 1px solid #3d1f4a;
+}
+
+.tableCell {
+  padding: 0.75rem;
+  border-bottom: 1px solid #3d1f4a22;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: #00000090;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 1rem;
+}
+
+.modalContent {
+  width: 100%;
+  max-width: 520px;
+  padding: 2rem;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modalTitle {
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  color: #f472b6;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.formLabel {
+  font-size: 0.8rem;
+  color: #c084fc;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.formActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+/* Buttons */
+.editBtn,
+.deleteBtn {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  border-radius: 0.5rem;
+  cursor: 'pointer';
+  font-weight: 600;
+  transition: all 0.15s;
+}
+
+.editBtn {
+  border: 1px solid #c084fc50;
+  background: #c084fc15;
+  color: #c084fc;
+}
+
+.editBtn:hover {
+  background: #c084fc30;
+  border-color: #c084fc;
+}
+
+.deleteBtn {
+  border: 1px solid #f8717150;
+  background: #f8717115;
+  color: #f87171;
+}
+
+.deleteBtn:hover {
+  background: #f8717130;
+  border-color: #f87171;
+}
+
+/* Charts */
+.chartGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chartCard {
+  padding: 1.5rem;
+}
+
+.chartTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  color: #c084fc;
+}
+
+/* Footer */
+.footer {
+  background: var(--color-surface-2);
+  border-top: 1px solid var(--color-border);
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footerText {
+  color: #9d6db0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Reset Modal */
+.resetModal {
+  max-width: 420px;
+  width: 100%;
+  padding: 2rem;
+  text-align: center;
+}
+
+.resetWarning {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.resetTitle {
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+  color: #f472b6;
+}
+
+.resetText {
+  color: #c084fc;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.resetActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.resetBtn {
+  flex: 1;
+  padding: 0.8rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #7e22ce, #9d174d);
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: #1a0f1e;
+  border: 1px solid #db277750;
+  color: #f472b6;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  z-index: 400;
+}
