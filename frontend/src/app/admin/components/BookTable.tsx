@@ -11,28 +11,16 @@ interface BookTableProps {
 }
 
 const StockBadge = ({ stock }: { stock: number }) => (
-    <span
-        style={{
-            padding: '0.2rem 0.6rem',
-            borderRadius: '9999px',
-            fontSize: '0.75rem',
-            fontWeight: '600',
-            background: stock === 0 ? '#f8717120' : '#34d39920',
-            color: stock === 0 ? '#f87171' : '#34d399',
-            border: `1px solid ${stock === 0 ? '#f8717150' : '#34d39950'}`,
-        }}
-    >
+    <span className={`${styles.stockBadge} ${stock === 0 ? styles.stockBadgeEmpty : styles.stockBadgeFull}`}>
         {stock}
     </span>
 );
 
 const BookCover = ({ imageUrl, title }: { imageUrl?: string; title: string }) => (
     imageUrl ? (
-        <img src={imageUrl} alt={title} style={{ height: '40px', width: '30px', objectFit: 'cover', borderRadius: '4px', display: 'inline-block' }} />
+        <img src={imageUrl} alt={title} className={styles.bookCoverImage} />
     ) : (
-        <div style={{ height: '40px', width: '30px', background: '#3d1f4a', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', margin: '0 auto' }}>
-            📗
-        </div>
+        <div className={styles.bookCoverPlaceholder}>📗</div>
     )
 );
 
@@ -69,7 +57,7 @@ export const BookTable = ({ books, onAdd, onEdit, onDelete }: BookTableProps) =>
                                 <BookCover imageUrl={b.imageUrl} title={b.title} />
                             </td>
                             <td className={styles.tableCell} style={{ textAlign: 'center' }}>
-                                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                                <div className={styles.buttonActions}>
                                     <button className={styles.editBtn} onClick={() => onEdit(b)}>
                                         ✏️ Düzenle
                                     </button>

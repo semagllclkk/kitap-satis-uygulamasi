@@ -156,7 +156,7 @@ export default function AdminPage() {
     return (
         <div className={styles.container}>
             <Navbar />
-            <main className="page" style={{ flex: 1, paddingBottom: '4rem' }}>
+            <main className={`page ${styles.mainContent}`}>
                 <AdminHeader />
                 {loading ? (
                     <div style={{ textAlign: 'center', padding: '4rem', color: '#9d6db0' }}>Yükleniyor...</div>

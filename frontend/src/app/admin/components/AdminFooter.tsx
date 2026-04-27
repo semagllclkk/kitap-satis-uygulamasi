@@ -13,18 +13,7 @@ export const AdminFooter = ({ resetting, onResetClick }: AdminFooterProps) => (
         <button
             onClick={onResetClick}
             disabled={resetting}
-            style={{
-                padding: '0.6rem 1.2rem',
-                borderRadius: '0.5rem',
-                background: 'transparent',
-                color: '#f87171',
-                border: '1px solid #f8717180',
-                fontWeight: '600',
-                cursor: 'pointer',
-                fontSize: '0.85rem',
-                opacity: resetting ? 0.6 : 1,
-                transition: 'all 0.2s',
-            }}
+            className={styles.resetFooterButton}
             onMouseOver={(e) => {
                 e.currentTarget.style.background = '#f8717115';
                 e.currentTarget.style.borderColor = '#f87171';

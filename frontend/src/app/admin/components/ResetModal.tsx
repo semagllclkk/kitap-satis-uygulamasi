@@ -24,7 +24,7 @@ export const ResetModal = ({ show, resetting, onConfirm, onCancel }: ResetModalP
                     <button className={styles.resetBtn} onClick={onConfirm} disabled={resetting}>
                         Evet, Sıfırla
                     </button>
-                    <button className="btn-ghost" onClick={onCancel} style={{ flex: 1 }}>
+                    <button className={`btn-ghost ${styles.flexFull}`} onClick={onCancel}>
                         İptal
                     </button>
                 </div>

@@ -56,6 +56,7 @@
 .statValue {
   font-size: 1.4rem;
   font-weight: 800;
+  color: var(--stat-color, #c084fc);
 }
 
 .statLabel {
@@ -163,9 +164,10 @@
   padding: 0.35rem 0.75rem;
   font-size: 0.75rem;
   border-radius: 0.5rem;
-  cursor: 'pointer';
+  cursor: pointer;
   font-weight: 600;
   transition: all 0.15s;
+  display: inline-block;
 }
 
 .editBtn {
@@ -188,6 +190,119 @@
 .deleteBtn:hover {
   background: #f8717130;
   border-color: #f87171;
+}
+
+/* Stock Badge */
+.stockBadge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.stockBadgeEmpty {
+  background: #f8717120;
+  color: #f87171;
+  border: 1px solid #f8717150;
+}
+
+.stockBadgeFull {
+  background: #34d39920;
+  color: #34d399;
+  border: 1px solid #34d39950;
+}
+
+/* Book Cover */
+.bookCoverImage {
+  height: 40px;
+  width: 30px;
+  object-fit: cover;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.bookCoverPlaceholder {
+  height: 40px;
+  width: 30px;
+  background: #3d1f4a;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  margin: 0 auto;
+}
+
+/* Button Actions */
+.buttonActions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+/* Reset Button */
+.resetButtonContainer {
+  flex: 1;
+}
+
+.resetButton {
+  width: 100%;
+  padding: 0.8rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #7e22ce, #9d174d);
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+}
+
+.resetButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Recent Orders */
+.orderCustomerName {
+  font-weight: 600;
+  color: #fce7f3;
+}
+
+.orderCustomerEmail {
+  font-size: 0.8rem;
+  color: #9d6db0;
+  font-weight: normal;
+}
+
+.orderItemList {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #c084fc;
+}
+
+.orderItemText {
+  color: #9d6db0;
+}
+
+.orderAmount {
+  color: #f472b6;
+  font-weight: 800;
+}
+
+.orderEmptyState {
+  padding: 2rem;
+  text-align: center;
+  color: #9d6db0;
+}
+
+/* Flex Utilities */
+.flexFull {
+  flex: 1;
+}
+
+.mainContent {
+  flex: 1;
+  padding-bottom: 4rem;
 }
 
 /* Charts */
@@ -223,6 +338,23 @@
   color: #9d6db0;
   font-size: 0.9rem;
   font-weight: 600;
+}
+
+.resetFooterButton {
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #f87171;
+  border: 1px solid #f8717180;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.resetFooterButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Reset Modal */
