@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 
-/**
- * Tek sorumluluk: Şifre hashing ve doğrulama
- * Cryptography logic AuthService'den ayrıştırıldı
- */
+
 @Injectable()
 export class PasswordService {
   async hash(password: string): Promise<string> {

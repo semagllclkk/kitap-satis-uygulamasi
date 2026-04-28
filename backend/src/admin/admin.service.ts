@@ -5,11 +5,6 @@ import { User, Author, Book, Order } from '../entities';
 import { DatabaseResetService } from '../database/database-reset.service';
 import { DemoDataSeederService } from '../database/demo-data-seeder.service';
 
-/**
- * Tek sorumluluk: Admin queries ve data aggregation
- * Database reset → DatabaseResetService
- * Demo data seeding → DemoDataSeederService
- */
 @Injectable()
 export class AdminService {
   constructor(

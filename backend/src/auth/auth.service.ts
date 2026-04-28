@@ -6,12 +6,7 @@ import { LoginDto, RegisterDto } from './auth.dto';
 import { PasswordService } from './password.service';
 import { TokenService } from './token.service';
 
-/**
- * Tek sorumluluk: Authentication logic (user doğrulama)
- * Password hashing → PasswordService
- * Token generation → TokenService
- * Response formatting → Controller
- */
+
 @Injectable()
 export class AuthService {
   constructor(

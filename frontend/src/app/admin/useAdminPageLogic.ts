@@ -1,9 +1,5 @@
 import { Book, Order, Author, YearlyStat } from '../admin/types';
 
-/**
- * Tek sorumluluk: Admin page state management logic
- * Separating business logic from UI rendering
- */
 export interface AdminPageState {
     orders: Order[];
     books: Book[];

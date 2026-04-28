@@ -4,10 +4,6 @@ import { Repository } from 'typeorm';
 import { Cart, Book, User } from '../entities';
 import { AddToCartDto, UpdateCartQuantityDto } from '../orders/orders.dto';
 
-/**
- * Tek sorumluluk: Sepet işlemleri
- * OrdersService'den ayrıştırıldı - cart ve order ayrı domains
- */
 @Injectable()
 export class CartService {
   constructor(

@@ -4,12 +4,6 @@ import { AuthService } from './auth.service';
 import { TokenService } from './token.service';
 import { LoginDto, RegisterDto, AuthResponseDto } from './auth.dto';
 
-/**
- * Tek sorumluluk: HTTP endpoint'leri ve response formatting
- * Business logic → AuthService
- * Token generation → TokenService
- * Response DTO mapping → Controller
- */
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {

@@ -119,7 +119,6 @@ export default function AdminBooksPage() {
                     </div>
                 )}
 
-                {/* Modal */}
                 {modal && (
                     <div style={{ position: 'fixed', inset: 0, background: '#00000090', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '1rem' }}>
                         <div className="glass" style={{ width: '100%', maxWidth: '520px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
