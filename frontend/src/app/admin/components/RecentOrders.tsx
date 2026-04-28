@@ -1,5 +1,6 @@
 'use client';
 
+import { FileText } from 'lucide-react';
 import { Order } from '../types';
 import styles from '../admin.module.css';
 
@@ -10,7 +11,10 @@ interface RecentOrdersProps {
 export const RecentOrders = ({ orders }: RecentOrdersProps) => (
     <div className={`card ${styles.tableCard}`}>
         <div className={styles.tableHeader}>
-            <h2 className={styles.tableTitle}>📝 Son Siparişler</h2>
+            <h2 className={styles.tableTitle}>
+                <FileText size={18} style={{ display: 'inline', marginRight: '0.4rem', verticalAlign: 'middle' }} />
+                Son Siparişler
+            </h2>
         </div>
         <div className={styles.tableScroll} style={{ maxHeight: '400px' }}>
             <table className={styles.table}>

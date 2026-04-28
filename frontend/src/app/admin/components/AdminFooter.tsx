@@ -1,5 +1,6 @@
 'use client';
 
+import { AlertTriangle } from 'lucide-react';
 import styles from '../admin.module.css';
 
 interface AdminFooterProps {
@@ -23,7 +24,8 @@ export const AdminFooter = ({ resetting, onResetClick }: AdminFooterProps) => (
                 e.currentTarget.style.borderColor = '#f8717180';
             }}
         >
-            {resetting ? 'Sıfırlanıyor...' : '⚠️ Admin Reset'}
+            <AlertTriangle size={14} style={{ display: 'inline', marginRight: '0.3rem', verticalAlign: 'middle' }} />
+            {resetting ? 'Sıfırlanıyor...' : 'Admin Reset'}
         </button>
     </footer>
 );

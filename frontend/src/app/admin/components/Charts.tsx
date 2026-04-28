@@ -46,7 +46,7 @@ export const Charts = ({ dailyData, yearlyData }: ChartsProps) => (
         </div>
 
         <div className={`card ${styles.chartCard}`}>
-            <h2 className={styles.chartTitle}>📅 {new Date().getFullYear()} Yıllık Satışlar</h2>
+            <h2 className={styles.chartTitle}>📅 2026 Aylık Satışlar</h2>
             <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={yearlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#3d1f4a" vertical={false} />

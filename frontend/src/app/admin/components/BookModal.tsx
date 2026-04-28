@@ -1,5 +1,6 @@
 'use client';
 
+import { Plus, Pencil, Save } from 'lucide-react';
 import { Author, Book, BookForm } from '../types';
 import styles from '../admin.module.css';
 
@@ -47,7 +48,12 @@ export const BookModal = ({
     return (
         <div className={styles.modal}>
             <div className={`glass ${styles.modalContent}`}>
-                <h2 className={styles.modalTitle}>{mode === 'add' ? '＋ Yeni Kitap' : '✏️ Kitabı Düzenle'}</h2>
+                <h2 className={styles.modalTitle}>
+                    {mode === 'add'
+                        ? <><Plus size={16} style={{ display: 'inline', marginRight: '0.3rem', verticalAlign: 'middle' }} />Yeni Kitap</>
+                        : <><Pencil size={16} style={{ display: 'inline', marginRight: '0.3rem', verticalAlign: 'middle' }} />Kitabı Düzenle</>
+                    }
+                </h2>
                 <div className={styles.formGroup}>
                     {fields.map(([key, label]) => (
                         <FormField
@@ -74,7 +80,7 @@ export const BookModal = ({
                 </div>
                 <div className={styles.formActions}>
                     <button className="btn-primary" onClick={onSave} disabled={saving} style={{ flex: 1 }}>
-                        {saving ? '…' : '💾 Kaydet'}
+                        {saving ? '…' : <><Save size={14} style={{ display: 'inline', marginRight: '0.3rem', verticalAlign: 'middle' }} />Kaydet</>}
                     </button>
                     <button className="btn-ghost" onClick={onClose} style={{ flex: 1 }}>
                         İptal

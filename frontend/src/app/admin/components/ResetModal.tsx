@@ -1,5 +1,6 @@
 'use client';
 
+import { AlertTriangle } from 'lucide-react';
 import styles from '../admin.module.css';
 
 interface ResetModalProps {
@@ -15,7 +16,9 @@ export const ResetModal = ({ show, resetting, onConfirm, onCancel }: ResetModalP
     return (
         <div className={styles.modal}>
             <div className={`glass ${styles.resetModal}`}>
-                <p className={styles.resetWarning}>⚠️</p>
+                <p className={styles.resetWarning}>
+                    <AlertTriangle size={36} color="#f87171" />
+                </p>
                 <h2 className={styles.resetTitle}>Sistemi Sıfırla</h2>
                 <p className={styles.resetText}>
                     Tüm test verileri silinip, sistem temiz demo verileriyle baştan kurulacaktır. Onaylıyor musunuz?

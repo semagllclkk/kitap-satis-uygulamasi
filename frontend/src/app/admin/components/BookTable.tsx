@@ -1,5 +1,6 @@
 'use client';
 
+import { ClipboardList, Plus, BookOpen, Pencil, Trash2 } from 'lucide-react';
 import { Book } from '../types';
 import styles from '../admin.module.css';
 
@@ -20,16 +21,21 @@ const BookCover = ({ imageUrl, title }: { imageUrl?: string; title: string }) =>
     imageUrl ? (
         <img src={imageUrl} alt={title} className={styles.bookCoverImage} />
     ) : (
-        <div className={styles.bookCoverPlaceholder}>📗</div>
+        <div className={styles.bookCoverPlaceholder}>
+            <BookOpen size={18} />
+        </div>
     )
 );
 
 export const BookTable = ({ books, onAdd, onEdit, onDelete }: BookTableProps) => (
     <div className={`card ${styles.tableCard}`}>
         <div className={styles.tableHeader}>
-            <h2 className={styles.tableTitle}>📋 Kitap Listesi</h2>
+            <h2 className={styles.tableTitle}>
+                <ClipboardList size={18} style={{ display: 'inline', marginRight: '0.4rem', verticalAlign: 'middle' }} />
+                Kitap Listesi
+            </h2>
             <button className="btn-primary" onClick={onAdd} style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
-                ＋ Yeni Kitap Ekle
+                <Plus size={15} /> Yeni Kitap Ekle
             </button>
         </div>
         <div className={styles.tableScroll}>
@@ -59,10 +65,10 @@ export const BookTable = ({ books, onAdd, onEdit, onDelete }: BookTableProps) =>
                             <td className={styles.tableCell} style={{ textAlign: 'center' }}>
                                 <div className={styles.buttonActions}>
                                     <button className={styles.editBtn} onClick={() => onEdit(b)}>
-                                        ✏️ Düzenle
+                                        <Pencil size={13} /> Düzenle
                                     </button>
                                     <button className={styles.deleteBtn} onClick={() => onDelete(b.id)}>
-                                        🗑️ Sil
+                                        <Trash2 size={13} /> Sil
                                     </button>
                                 </div>
                             </td>
