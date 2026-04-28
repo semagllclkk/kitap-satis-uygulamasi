@@ -20,6 +20,7 @@ import {
     saveBook as saveBookAPI,
     deleteBook as deleteBookAPI,
     resetDatabase,
+    seedRandomOrders as seedRandomOrdersAPI,
 } from './helpers';
 import styles from './admin.module.css';
 
@@ -40,6 +41,7 @@ export default function AdminPage() {
     const [toast, setToast] = useState('');
     const [showResetModal, setShowResetModal] = useState(false);
     const [resetting, setResetting] = useState(false);
+    const [seeding, setSeeding] = useState(false);
 
     useEffect(() => {
         const role = localStorage.getItem('userRole');
@@ -150,6 +152,21 @@ export default function AdminPage() {
         }
     };
 
+    const handleSeedRandom = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        setSeeding(true);
+        try {
+            await seedRandomOrdersAPI(token);
+            showToast('Random veriler eklendi ✓');
+            fetchAll();
+        } catch {
+            alert('Hata oluştu.');
+        } finally {
+            setSeeding(false);
+        }
+    };
+
     const chartData = buildChartData(orders);
     const { totalRevenue, totalYearRevenue, totalYearOrders } = calculateStats(orders, yearlyStats);
 
@@ -170,7 +187,7 @@ export default function AdminPage() {
                 )}
             </main>
 
-            <AdminFooter resetting={resetting} onResetClick={() => setShowResetModal(true)} />
+            <AdminFooter resetting={resetting} seeding={seeding} onResetClick={() => setShowResetModal(true)} onSeedRandomClick={handleSeedRandom} />
 
             <BookModal mode={modal} book={editing} form={form} authors={authors} saving={saving} onFormChange={setForm} onSave={saveBook} onClose={() => setModal(null)} />
             <ResetModal show={showResetModal} resetting={resetting} onConfirm={handleReset} onCancel={() => setShowResetModal(false)} />

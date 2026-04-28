@@ -3,11 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Author, Book, Order, OrderDetails, Cart } from '../entities';
 
-/**
- * Tek sorumluluk: Veritabanı reset işlemleri
- * Sadece random eklenen kitaplara ait satış verilerini siler.
- * Demo kitapların gerçek alışveriş verileri korunur.
- */
 @Injectable()
 export class DatabaseResetService {
   constructor(
@@ -24,32 +19,22 @@ export class DatabaseResetService {
   ) {}
 
   async cleanRandomData(): Promise<void> {
-    const demoBooks = [
-      '10 Dakika 38 Saniye',
-      'Bir İdam Mahkumunun Son Günü',
-      'Masumiyet Müzesi',
-      'Suç ve Ceza',
-      'Vadideki Zambak',
-    ];
-    const demoAuthors = ['Orhan Pamuk', 'Ahmet Ümit', 'Elif Şafak', 'Victor Hugo', 'Fyodor Dostoyevski'];
-
-    // Random (demo olmayan) kitapları bul
+    // Demo kitaplar /uploads/ ile tanımlanır — title encoding sorunları yaşamamak için imageUrl kullan
     const randomBooks = await this.bookRepository
       .createQueryBuilder('book')
-      .where('book.title NOT IN (:...titles)', { titles: demoBooks })
+      .where("book.imageUrl NOT LIKE '/uploads/%'")
+      .orWhere('book.imageUrl IS NULL')
       .getMany();
 
     if (randomBooks.length > 0) {
       const bookIds = randomBooks.map(b => b.id);
 
-      // Bu kitaplara ait order details'ları bul
       const orderDetails = await this.orderDetailsRepository
         .createQueryBuilder('od')
         .where('od.bookId IN (:...bookIds)', { bookIds })
         .getMany();
 
       if (orderDetails.length > 0) {
-        // İlgili siparişlerin toplam fiyat/miktarını düzelt
         for (const od of orderDetails) {
           const order = await this.orderRepository.findOne({ where: { id: od.orderId } });
           if (order) {
@@ -61,7 +46,6 @@ export class DatabaseResetService {
         await this.orderDetailsRepository.delete(orderDetails.map(od => od.id));
       }
 
-      // Sepetten de kaldır
       await this.cartRepository
         .createQueryBuilder()
         .where('bookId IN (:...bookIds)', { bookIds })
@@ -71,14 +55,19 @@ export class DatabaseResetService {
       await this.bookRepository.delete(bookIds);
     }
 
-    // Demo olmayan yazarları sil
-    const randomAuthors = await this.authorRepository
-      .createQueryBuilder('author')
-      .where('author.name NOT IN (:...names)', { names: demoAuthors })
-      .getMany();
+    // Demo olmayan yazarlar: kitabı kalmamış olanları sil
+    const authorsWithBooks = await this.bookRepository
+      .createQueryBuilder('book')
+      .select('DISTINCT book.authorId', 'authorId')
+      .getRawMany();
+    const activeAuthorIds = authorsWithBooks.map(r => r.authorId).filter(Boolean);
 
-    if (randomAuthors.length > 0) {
-      await this.authorRepository.delete(randomAuthors.map(a => a.id));
+    if (activeAuthorIds.length > 0) {
+      await this.authorRepository
+        .createQueryBuilder()
+        .where('id NOT IN (:...ids)', { ids: activeAuthorIds })
+        .delete()
+        .execute();
     }
 
     // totalQuantity 0 olan boş siparişleri temizle

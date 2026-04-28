@@ -91,3 +91,9 @@ export const resetDatabase = async (token: string) => {
     await fetch(`${API}/admin/reset`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
     await fetch(`${API}/admin/seed-demo`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
 };
+
+export const seedRandomOrders = async (token: string) => {
+    const res = await fetch(`${API}/admin/seed-random`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+    return res.json();
+};
+

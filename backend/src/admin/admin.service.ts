@@ -45,6 +45,10 @@ export class AdminService {
     return this.demoDataSeederService.seedDemoData();
   }
 
+  async seedRandomOrders(): Promise<{ message: string }> {
+    return this.demoDataSeederService.seedRandomOrders();
+  }
+
   async getAllUsers(): Promise<any[]> {
     return this.userRepository.find({
       select: ['id', 'email', 'name', 'role', 'createdAt'],
