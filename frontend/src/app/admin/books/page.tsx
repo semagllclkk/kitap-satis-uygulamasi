@@ -127,13 +127,13 @@ export default function AdminBooksPage() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
                                 {[['title', 'Başlık *'], ['price', 'Fiyat *'], ['stock', 'Stok *'], ['isbn', 'ISBN'], ['imageUrl', 'Kapak URL'], ['publicationYear', 'Yayın Yılı'], ['publisher', 'Yayınevi']].map(([k, label]) => (
                                     <div key={k}>
-                                        <label style={{ fontSize: '0.8rem', color: '#c084fc', display: 'block', marginBottom: '0.3rem' }}>{label}</label>
-                                        <input className="input" value={(form as Record<string, string>)[k]} onChange={e => setForm(f => ({ ...f, [k]: e.target.value }))} />
+                                        <label htmlFor={`field-${k}`} style={{ fontSize: '0.8rem', color: '#c084fc', display: 'block', marginBottom: '0.3rem' }}>{label}</label>
+                                        <input id={`field-${k}`} className="input" value={(form as Record<string, string>)[k]} onChange={e => setForm(f => ({ ...f, [k]: e.target.value }))} />
                                     </div>
                                 ))}
                                 <div>
-                                    <label style={{ fontSize: '0.8rem', color: '#c084fc', display: 'block', marginBottom: '0.3rem' }}>Yazar *</label>
-                                    <select className="input" value={form.authorId} onChange={e => setForm(f => ({ ...f, authorId: e.target.value }))}>
+                                    <label htmlFor="author-select" style={{ fontSize: '0.8rem', color: '#c084fc', display: 'block', marginBottom: '0.3rem' }}>Yazar *</label>
+                                    <select id="author-select" className="input" value={form.authorId} onChange={e => setForm(f => ({ ...f, authorId: e.target.value }))}>
                                         <option value="">Seçin…</option>
                                         {authors.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                                     </select>

@@ -159,7 +159,7 @@ export default function AdminPage() {
             <main className={`page ${styles.mainContent}`}>
                 <AdminHeader />
                 {loading ? (
-                    <div style={{ textAlign: 'center', padding: '4rem', color: '#9d6db0' }}>Yükleniyor...</div>
+                    <div className={styles.loadingContainer}>Yükleniyor...</div>
                 ) : (
                     <>
                         <AdminStats books={books} orders={orders} yearlyStats={yearlyStats} totalRevenue={totalRevenue} totalYearRevenue={totalYearRevenue} totalYearOrders={totalYearOrders} />
