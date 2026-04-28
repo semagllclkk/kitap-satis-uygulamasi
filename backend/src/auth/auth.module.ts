@@ -3,6 +3,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { PasswordService } from './password.service';
+import { TokenService } from './token.service';
 import { User } from '../entities';
 
 @Module({
@@ -14,7 +16,7 @@ import { User } from '../entities';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
-  exports: [AuthService],
+  providers: [AuthService, PasswordService, TokenService],
+  exports: [AuthService, TokenService],
 })
 export class AuthModule {}

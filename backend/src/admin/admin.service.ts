@@ -1,9 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
-import { User, Author, Book, Order, OrderDetails, Cart } from '../entities';
+import { User, Author, Book, Order } from '../entities';
+import { DatabaseResetService } from '../database/database-reset.service';
+import { DemoDataSeederService } from '../database/demo-data-seeder.service';
 
+/**
+ * Tek sorumluluk: Admin queries ve data aggregation
+ * Database reset → DatabaseResetService
+ * Demo data seeding → DemoDataSeederService
+ */
 @Injectable()
 export class AdminService {
   constructor(
@@ -15,139 +21,30 @@ export class AdminService {
     private bookRepository: Repository<Book>,
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
-    @InjectRepository(OrderDetails)
-    private orderDetailsRepository: Repository<OrderDetails>,
-    @InjectRepository(Cart)
-    private cartRepository: Repository<Cart>,
+    private databaseResetService: DatabaseResetService,
+    private demoDataSeederService: DemoDataSeederService,
   ) {}
 
+  async getStats() {
+    const [users, authors, books, orders] = await Promise.all([
+      this.userRepository.count(),
+      this.authorRepository.count(),
+      this.bookRepository.count(),
+      this.orderRepository.count(),
+    ]);
+
+    return { users, authors, books, orders };
+  }
+
   async resetDatabase(): Promise<{ message: string }> {
-    const demoAuthors = ['Orhan Pamuk', 'Ahmet Ümit', 'Elif Şafak'];
-    const demoBooks = ['Kar', 'Beyaz Kale', 'Dehşet', '10 Dakika 38 Saniye', 'İstanbul Müzesi'];
-
-    // 1. Random Kitapları Sil
-    const randomBooks = await this.bookRepository.createQueryBuilder('book')
-      .where('book.title NOT IN (:...titles)', { titles: demoBooks })
-      .getMany();
-
-    if (randomBooks.length > 0) {
-      const bookIds = randomBooks.map((b) => b.id);
-
-      const orderDetails = await this.orderDetailsRepository.createQueryBuilder('od')
-        .where('od.bookId IN (:...bookIds)', { bookIds })
-        .getMany();
-
-      if (orderDetails.length > 0) {
-        for (const od of orderDetails) {
-          const order = await this.orderRepository.findOne({ where: { id: od.orderId } });
-          if (order) {
-            order.totalPrice -= Number(od.price) * od.quantity;
-            order.totalQuantity -= od.quantity;
-            await this.orderRepository.save(order);
-          }
-        }
-        await this.orderDetailsRepository.delete(orderDetails.map((od) => od.id));
-      }
-
-      await this.cartRepository.createQueryBuilder()
-        .where('bookId IN (:...bookIds)', { bookIds })
-        .delete()
-        .execute();
-
-      await this.bookRepository.delete(bookIds);
-    }
-
-    // 2. Random Yazarları Sil
-    const randomAuthors = await this.authorRepository.createQueryBuilder('author')
-      .where('author.name NOT IN (:...names)', { names: demoAuthors })
-      .getMany();
-
-    if (randomAuthors.length > 0) {
-      await this.authorRepository.delete(randomAuthors.map((a) => a.id));
-    }
-
-    // 3. İçi boşalan siparişleri sil
-    await this.orderRepository.createQueryBuilder()
-      .where('totalQuantity <= 0')
-      .delete()
-      .execute();
-
-    // Not: Artık kullanıcıları veya geçerli siparişleri silmiyoruz!
-
-    return {
-      message: 'Sadece test amacıyla eklenen random veriler temizlendi.',
-    };
+    await this.databaseResetService.cleanRandomData();
+    return { message: 'Sadece test amacıyla eklenen random veriler temizlendi.' };
   }
 
   async seedDemoData(): Promise<{ message: string }> {
-    // Zaten veri varsa tekrar ekleme
-    const existingCount = await this.authorRepository.count();
-    if (existingCount > 0) {
-      return { message: 'Demo veriler zaten mevcut, atlandı.' };
-    }
-
-    // Demo yazarlar
-    const author1 = this.authorRepository.create({
-      name: 'Orhan Pamuk',
-      biography: 'Türk yazarı ve Nobel Ödülü sahibi',
-      birthDate: '1952-06-07',
-      nationality: 'Türkiye',
-    });
-
-    const author2 = this.authorRepository.create({
-      name: 'Ahmet Ümit',
-      biography: 'Türk yazarı ve senarist',
-      birthDate: '1955-12-21',
-      nationality: 'Türkiye',
-    });
-
-    const author3 = this.authorRepository.create({
-      name: 'Elif Şafak',
-      biography: 'Uluslararası ünlü Türk yazarı',
-      birthDate: '1971-10-25',
-      nationality: 'Türkiye',
-    });
-
-    const savedAuthor1 = await this.authorRepository.save(author1);
-    const savedAuthor2 = await this.authorRepository.save(author2);
-    const savedAuthor3 = await this.authorRepository.save(author3);
-
-    // Demo kitaplar
-    const books = [
-      {
-        title: 'Kar',
-        author: savedAuthor1,
-        description: 'Kars şehrinde geçen, tasavvufi bir roman',
-        price: 45.99,
-        stock: 20,
-        isbn: '978-9753862745',
-        publicationYear: '2002',
-        publisher: 'İletişim',
-        imageUrl:
-          'https://via.placeholder.com/200x300?text=Kar',
-      },
-      {
-        title: 'Beyaz Kale',
-        author: savedAuthor1,
-        description: 'Tarihsel ve fantastik unsurları bir araya getiren roman',
-        price: 35.5,
-        stock: 15,
-        isbn: '978-9753860268',
-        publicationYear: '1985',
-        publisher: 'İletişim',
-        imageUrl:
-          'https://via.placeholder.com/200x300?text=Beyaz+Kale',
-      },
-      {
-        title: 'Dehşet',
-        author: savedAuthor2,
-        description: 'Gerilim ve esrar dolu, polisiye bir roman',
-        price: 28.75,
-        stock: 25,
-        isbn: '978-9753870894',
-        publicationYear: '2004',
-        publisher: 'Everest',
-        imageUrl:
+    return this.demoDataSeederService.seedDemoData();
+  }
+}
           'https://via.placeholder.com/200x300?text=Dehşet',
       },
       {
@@ -187,9 +84,10 @@ export class AdminService {
     if (customer && savedBooks.length > 0) {
       const orders = [];
       const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth();
       
-      // Geçmiş aylara ait rastgele siparişler oluştur
-      for (let month = 0; month < 12; month++) {
+      // Sadece Ocak-Nisan (0-3) aylarına ait rastgele siparişler oluştur
+      for (let month = 0; month <= Math.min(3, currentMonth); month++) {
         // Her ay için 1-3 arası rastgele sipariş
         const numOrders = Math.floor(Math.random() * 3) + 1;
         

@@ -24,11 +24,34 @@ export const buildChartData = (orders: Order[]) => {
     return days;
 };
 
-export const calculateStats = (orders: Order[], yearlyStats: YearlyStat[]) => ({
-    totalRevenue: orders.reduce((s, o) => s + Number(o.totalPrice), 0),
-    totalYearRevenue: yearlyStats.reduce((s, m) => s + m.gelir, 0),
-    totalYearOrders: yearlyStats.reduce((s, m) => s + m.siparis, 0),
-});
+export const calculateStats = (orders: Order[], yearlyStats: YearlyStat[]) => {
+    const currentMonth = new Date().getMonth() + 1;
+    // Nisan'dan sonrası sıfırla, cari ay live update olsun
+    const filteredStats = yearlyStats.map((stat, idx) => {
+        const monthNum = idx + 1;
+        if (monthNum > 4 && monthNum !== currentMonth) {
+            return { ...stat, gelir: 0, siparis: 0 };
+        }
+        if (monthNum === currentMonth) {
+            const currentMonthOrders = orders.filter(o => 
+                new Date(o.createdAt).getMonth() + 1 === currentMonth && 
+                new Date(o.createdAt).getFullYear() === new Date().getFullYear()
+            );
+            return {
+                ...stat,
+                gelir: currentMonthOrders.reduce((sum, o) => sum + Number(o.totalPrice), 0),
+                siparis: currentMonthOrders.length
+            };
+        }
+        return stat;
+    });
+    
+    return {
+        totalRevenue: orders.reduce((s, o) => s + Number(o.totalPrice), 0),
+        totalYearRevenue: filteredStats.reduce((s, m) => s + m.gelir, 0),
+        totalYearOrders: filteredStats.reduce((s, m) => s + m.siparis, 0),
+    };
+};
 
 export const fetchAdminData = async (token: string) => {
     const [ordersRes, booksRes, authorsRes, yearlyRes] = await Promise.all([

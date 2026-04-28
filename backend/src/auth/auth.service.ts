@@ -1,20 +1,27 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
 import { User } from '../entities';
 import { LoginDto, RegisterDto } from './auth.dto';
+import { PasswordService } from './password.service';
+import { TokenService } from './token.service';
 
+/**
+ * Tek sorumluluk: Authentication logic (user doğrulama)
+ * Password hashing → PasswordService
+ * Token generation → TokenService
+ * Response formatting → Controller
+ */
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    private jwtService: JwtService,
+    private passwordService: PasswordService,
+    private tokenService: TokenService,
   ) {}
 
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto): Promise<User> {
     const { email, name, password } = registerDto;
 
     const existingUser = await this.userRepository.findOne({ where: { email } });
@@ -22,7 +29,7 @@ export class AuthService {
       throw new BadRequestException('Bu email zaten kayıtlı');
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await this.passwordService.hash(password);
     const user = this.userRepository.create({
       email,
       name,
@@ -30,24 +37,10 @@ export class AuthService {
       role: 'customer',
     });
 
-    await this.userRepository.save(user);
-
-    const token = this.jwtService.sign({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    });
-
-    return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      token,
-    };
+    return this.userRepository.save(user);
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<User> {
     const { email, password } = loginDto;
 
     const user = await this.userRepository.findOne({ where: { email } });
@@ -55,23 +48,15 @@ export class AuthService {
       throw new UnauthorizedException('Geçersiz email veya şifre');
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await this.passwordService.verify(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Geçersiz email veya şifre');
     }
 
-    const token = this.jwtService.sign({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    });
+    return user;
+  }
 
-    return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      token,
-    };
+  generateToken(user: User): string {
+    return this.tokenService.generateToken(user);
   }
 }

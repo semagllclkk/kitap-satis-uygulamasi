@@ -1,0 +1,85 @@
+/* Navbar stili - HTML'den ayrıştırıldı */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(15, 10, 15, 0.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid #3d1f4a;
+  padding: 0 1.5rem;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.logo-icon {
+  font-size: 1.4rem;
+}
+
+.logo-text {
+  font-weight: 800;
+  font-size: 1.1rem;
+  background: linear-gradient(135deg, #f472b6, #db2777);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.admin-badge {
+  margin-left: 0.25rem;
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #d1d5db;
+  font-size: 0.9rem;
+}
+
+.nav-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.nav-logout-btn {
+  background: linear-gradient(135deg, #f472b6, #db2777);
+  color: white;
+  border: none;
+}
+
+.nav-logout-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+.nav-cart-link {
+  color: #f472b6;
+  text-decoration: none;
+  border: 1px solid #f472b6;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+}
+
+.nav-cart-link:hover {
+  background: #f472b6;
+  color: white;
+}
