@@ -5,7 +5,8 @@ import { Author, Book, Order, OrderDetails, Cart } from '../entities';
 
 /**
  * Tek sorumluluk: Veritabanı reset işlemleri
- * AdminService'den ayrıştırıldı
+ * Sadece random eklenen kitaplara ait satış verilerini siler.
+ * Demo kitapların gerçek alışveriş verileri korunur.
  */
 @Injectable()
 export class DatabaseResetService {
@@ -23,9 +24,16 @@ export class DatabaseResetService {
   ) {}
 
   async cleanRandomData(): Promise<void> {
-    const demoBooks = ['Kar', 'Beyaz Kale', 'Dehşet', '10 Dakika 38 Saniye', 'İstanbul Müzesi'];
-    const demoAuthors = ['Orhan Pamuk', 'Ahmet Ümit', 'Elif Şafak'];
+    const demoBooks = [
+      '10 Dakika 38 Saniye',
+      'Bir İdam Mahkumunun Son Günü',
+      'Masumiyet Müzesi',
+      'Suç ve Ceza',
+      'Vadideki Zambak',
+    ];
+    const demoAuthors = ['Orhan Pamuk', 'Ahmet Ümit', 'Elif Şafak', 'Victor Hugo', 'Fyodor Dostoyevski'];
 
+    // Random (demo olmayan) kitapları bul
     const randomBooks = await this.bookRepository
       .createQueryBuilder('book')
       .where('book.title NOT IN (:...titles)', { titles: demoBooks })
@@ -33,23 +41,27 @@ export class DatabaseResetService {
 
     if (randomBooks.length > 0) {
       const bookIds = randomBooks.map(b => b.id);
+
+      // Bu kitaplara ait order details'ları bul
       const orderDetails = await this.orderDetailsRepository
         .createQueryBuilder('od')
         .where('od.bookId IN (:...bookIds)', { bookIds })
         .getMany();
 
       if (orderDetails.length > 0) {
+        // İlgili siparişlerin toplam fiyat/miktarını düzelt
         for (const od of orderDetails) {
           const order = await this.orderRepository.findOne({ where: { id: od.orderId } });
           if (order) {
-            order.totalPrice -= Number(od.price) * od.quantity;
-            order.totalQuantity -= od.quantity;
+            order.totalPrice = Math.max(0, Number(order.totalPrice) - Number(od.price) * od.quantity);
+            order.totalQuantity = Math.max(0, order.totalQuantity - od.quantity);
             await this.orderRepository.save(order);
           }
         }
         await this.orderDetailsRepository.delete(orderDetails.map(od => od.id));
       }
 
+      // Sepetten de kaldır
       await this.cartRepository
         .createQueryBuilder()
         .where('bookId IN (:...bookIds)', { bookIds })
@@ -59,6 +71,7 @@ export class DatabaseResetService {
       await this.bookRepository.delete(bookIds);
     }
 
+    // Demo olmayan yazarları sil
     const randomAuthors = await this.authorRepository
       .createQueryBuilder('author')
       .where('author.name NOT IN (:...names)', { names: demoAuthors })
@@ -68,6 +81,7 @@ export class DatabaseResetService {
       await this.authorRepository.delete(randomAuthors.map(a => a.id));
     }
 
+    // totalQuantity 0 olan boş siparişleri temizle
     await this.orderRepository
       .createQueryBuilder()
       .where('totalQuantity <= 0')
